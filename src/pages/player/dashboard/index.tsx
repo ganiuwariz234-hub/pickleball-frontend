@@ -1,6 +1,14 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
+import { AppDispatch } from '../../../store';
+import { 
+  fetchPlayerStats, 
+  fetchMatchHistory, 
+  fetchRecentActivity, 
+  fetchTournamentResults, 
+  fetchUpcomingTournaments 
+} from '../../../store/slices/playerDashboardSlice';
 import Overview from './Overview';
 import DigitalIDCard from '../../../components/DigitalIDCard';
 import Matches from './Matches';
@@ -9,29 +17,32 @@ import Activity from './Activity';
 import Settings from './Settings';
 
 const PlayerDashboard = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [activeTab, setActiveTab] = useState('overview');
+  const { 
+    playerStats, 
+    matchHistory, 
+    recentActivity, 
+    tournamentResults, 
+    upcomingTournaments,
+    loading,
+    error 
+  } = useSelector((state: RootState) => state.playerDashboard);
   
-  // Mock data for all components
-  const playerStats = {
-    tournamentsPlayed: 12,
-    tournamentsWon: 3,
-    currentRanking: 45,
-    rankingChange: '+5',
-    totalPoints: 1250,
-    matchesPlayed: 48,
-    winRate: 68,
-    nextTournament: 'Spring Championship',
-    nextTournamentDate: '2024-04-15',
-    upcomingMatches: 2,
-    recentAchievements: [
-      'Tournament Winner - Winter League',
-      'Ranking Improvement - Top 50',
-      'Perfect Match - 11-0 Victory'
-    ]
-  };
+  const [activeTab, setActiveTab] = useState('overview');
 
-  // Profile completion status
+  // Fetch all dashboard data on component mount
+  useEffect(() => {
+    if (user?.id) {
+      dispatch(fetchPlayerStats(user.id));
+      dispatch(fetchMatchHistory(user.id));
+      dispatch(fetchRecentActivity(user.id));
+      dispatch(fetchTournamentResults(user.id));
+      dispatch(fetchUpcomingTournaments());
+    }
+  }, [dispatch, user?.id]);
+
+  // Profile completion status calculation
   const profileCompletion = {
     photo: !!user?.profile_photo,
     idDocument: !!user?.verification_documents,
@@ -51,67 +62,6 @@ const PlayerDashboard = () => {
     profileCompletion.location
   ].filter(Boolean).length;
 
-  // Match history data
-  const matchHistory = [
-    {
-      id: '1',
-      opponent: 'Maria González',
-      date: '2024-03-20',
-      result: 'Won',
-      score: '11-8, 11-6',
-      tournament: 'Winter League Finals',
-      points: '+150'
-    },
-    {
-      id: '2',
-      opponent: 'Carlos Rodríguez',
-      date: '2024-03-18',
-      result: 'Lost',
-      score: '8-11, 9-11',
-      tournament: 'Practice Match',
-      points: '-25'
-    },
-    {
-      id: '3',
-      opponent: 'Ana Martínez',
-      date: '2024-03-15',
-      result: 'Won',
-      score: '11-9, 11-7',
-      tournament: 'Club Championship',
-      points: '+100'
-    }
-  ];
-
-  const recentActivity: Array<{
-    type: 'tournament' | 'match' | 'ranking';
-    title: string;
-    date: string;
-    result: string;
-    points: string;
-  }> = [
-    {
-      type: 'tournament',
-      title: 'Winter League Finals',
-      date: '2024-03-20',
-      result: 'Winner',
-      points: '+150'
-    },
-    {
-      type: 'match',
-      title: 'Practice Match vs. John D.',
-      date: '2024-03-18',
-      result: 'Won 11-8',
-      points: '+25'
-    },
-    {
-      type: 'ranking',
-      title: 'Ranking Update',
-      date: '2024-03-15',
-      result: 'Moved to #45',
-      points: '+5'
-    }
-  ];
-
   // Affiliation data
   const affiliationData = {
     location: {
@@ -126,6 +76,33 @@ const PlayerDashboard = () => {
   const privacySettings = {
     canBeFound: user?.can_be_found ?? true
   };
+
+  // Loading state
+  if (loading && !playerStats) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error && !playerStats) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -228,21 +205,25 @@ const PlayerDashboard = () => {
               {/* Matches Tab */}
               {activeTab === 'matches' && (
                 <div className="animate-on-scroll">
-                  <Matches matchHistory={matchHistory} />
+                  <Matches matchHistory={matchHistory || []} />
                 </div>
               )}
 
               {/* Tournaments Tab */}
               {activeTab === 'tournaments' && (
                 <div className="animate-on-scroll">
-                  <Tournaments playerStats={playerStats} />
+                  <Tournaments 
+                    playerStats={playerStats}
+                    tournamentResults={tournamentResults || []}
+                    upcomingTournaments={upcomingTournaments || []}
+                  />
                 </div>
               )}
 
               {/* Activity Tab */}
               {activeTab === 'activity' && (
                 <div className="animate-on-scroll">
-                  <Activity recentActivity={recentActivity} />
+                  <Activity recentActivity={recentActivity || []} />
                 </div>
               )}
 

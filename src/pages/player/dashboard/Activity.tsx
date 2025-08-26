@@ -40,6 +40,25 @@ const Activity: React.FC<ActivityProps> = ({ recentActivity }) => {
     }
   };
 
+  // Calculate activity statistics
+  const thisMonthActivities = recentActivity.filter(activity => {
+    const activityDate = new Date(activity.date);
+    const now = new Date();
+    return activityDate.getMonth() === now.getMonth() && 
+           activityDate.getFullYear() === now.getFullYear();
+  });
+
+  const pointsEarned = thisMonthActivities.reduce((sum, activity) => {
+    const points = parseInt(activity.points.replace(/[+-]/g, ''));
+    return activity.points.startsWith('+') ? sum + points : sum;
+  }, 0);
+
+  const achievements = recentActivity.filter(activity => 
+    activity.result.includes('Winner') || 
+    activity.result.includes('Top') || 
+    activity.result.includes('Improvement')
+  ).length;
+
   return (
     <div className="space-y-6">
       {/* Recent Activity Feed */}
@@ -48,25 +67,32 @@ const Activity: React.FC<ActivityProps> = ({ recentActivity }) => {
           <h3 className="text-lg font-semibold">Recent Activity</h3>
         </div>
         <div className="p-6">
-          <div className="space-y-4">
-            {recentActivity.map((activity, index) => (
-              <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getActivityColor(activity.type)}`}>
-                    {getActivityIcon(activity.type)}
+          {recentActivity.length > 0 ? (
+            <div className="space-y-4">
+              {recentActivity.map((activity, index) => (
+                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getActivityColor(activity.type)}`}>
+                      {getActivityIcon(activity.type)}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">{activity.title}</h4>
+                      <p className="text-sm text-gray-600">{activity.date}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">{activity.title}</h4>
-                    <p className="text-sm text-gray-600">{activity.date}</p>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{activity.result}</p>
+                    <p className="text-sm text-green-600">{activity.points}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">{activity.result}</p>
-                  <p className="text-sm text-green-600">{activity.points}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">No recent activity</p>
+              <p className="text-sm text-gray-400 mt-2">Start playing matches and tournaments to see your activity here</p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -79,28 +105,28 @@ const Activity: React.FC<ActivityProps> = ({ recentActivity }) => {
           </h3>
         </div>
         <div className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Tournament Winner - Winter League</p>
+          {achievements > 0 ? (
+            <div className="space-y-4">
+              {recentActivity
+                .filter(activity => 
+                  activity.result.includes('Winner') || 
+                  activity.result.includes('Top') || 
+                  activity.result.includes('Improvement')
+                )
+                .slice(0, 5)
+                .map((achievement, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <p className="text-sm text-gray-700">{achievement.title} - {achievement.result}</p>
+                  </div>
+                ))}
             </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Ranking Improvement - Top 50</p>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-gray-500">No achievements yet</p>
+              <p className="text-sm text-gray-400 mt-2">Keep playing to unlock achievements</p>
             </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Perfect Match - 11-0 Victory</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">First Tournament Entry</p>
-            </div>
-            <div className="flex items-start space-x-3">
-              <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
-              <p className="text-sm text-gray-700">Profile Completion - 100%</p>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -111,7 +137,7 @@ const Activity: React.FC<ActivityProps> = ({ recentActivity }) => {
             <h3 className="text-sm font-medium">This Month</h3>
             <span className="text-sm font-medium">📅</span>
           </div>
-          <div className="text-2xl font-bold text-blue-600">12</div>
+          <div className="text-2xl font-bold text-blue-600">{thisMonthActivities.length}</div>
           <p className="text-xs text-gray-600">activities</p>
         </div>
 
@@ -120,7 +146,7 @@ const Activity: React.FC<ActivityProps> = ({ recentActivity }) => {
             <h3 className="text-sm font-medium">Points Earned</h3>
             <span className="text-sm font-medium">📊</span>
           </div>
-          <div className="text-2xl font-bold text-green-600">+275</div>
+          <div className="text-2xl font-bold text-green-600">+{pointsEarned}</div>
           <p className="text-xs text-gray-600">this month</p>
         </div>
 
@@ -129,7 +155,7 @@ const Activity: React.FC<ActivityProps> = ({ recentActivity }) => {
             <h3 className="text-sm font-medium">Achievements</h3>
             <Award className="h-4 w-4 text-yellow-500" />
           </div>
-          <div className="text-2xl font-bold text-yellow-600">5</div>
+          <div className="text-2xl font-bold text-yellow-600">{achievements}</div>
           <p className="text-xs text-gray-600">unlocked</p>
         </div>
       </div>

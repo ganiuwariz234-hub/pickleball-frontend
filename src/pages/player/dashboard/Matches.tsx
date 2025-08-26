@@ -68,30 +68,43 @@ const Matches: React.FC<MatchesProps> = ({ matchHistory }) => {
           </h3>
         </div>
         <div className="p-6">
-          <div className="space-y-4">
-            {matchHistory.map((match) => (
-              <div key={match.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    match.result === 'Won' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                  }`}>
-                    {match.result === 'Won' ? <Trophy className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+          {matchHistory.length > 0 ? (
+            <div className="space-y-4">
+              {matchHistory.map((match) => (
+                <div key={match.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      match.result === 'Won' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                    }`}>
+                      {match.result === 'Won' ? <Trophy className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-gray-900">vs. {match.opponent}</h4>
+                      <p className="text-sm text-gray-600">{match.tournament}</p>
+                      <p className="text-xs text-gray-500">{match.date}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900">vs. {match.opponent}</h4>
-                    <p className="text-sm text-gray-600">{match.tournament}</p>
-                    <p className="text-xs text-gray-500">{match.date}</p>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{match.score}</p>
+                    <p className={`text-sm ${match.result === 'Won' ? 'text-green-600' : 'text-red-600'}`}>
+                      {match.points}
+                    </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900">{match.score}</p>
-                  <p className={`text-sm ${match.result === 'Won' ? 'text-green-600' : 'text-red-600'}`}>
-                    {match.points}
-                  </p>
-                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Users className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No Matches Yet</h3>
+              <p className="text-gray-500 mb-4">Start playing matches to see your history here</p>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-400">• Join tournaments to play competitive matches</p>
+                <p className="text-sm text-gray-400">• Find players for practice matches</p>
+                <p className="text-sm text-gray-400">• Track your performance and progress</p>
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -101,9 +114,18 @@ const Matches: React.FC<MatchesProps> = ({ matchHistory }) => {
           <h3 className="text-lg font-semibold">Performance Trend</h3>
         </div>
         <div className="p-6">
-          <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
-            <p className="text-gray-500">Performance chart will be displayed here</p>
-          </div>
+          {matchHistory.length > 0 ? (
+            <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Performance chart will be displayed here</p>
+            </div>
+          ) : (
+            <div className="h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <p className="text-gray-500 mb-2">No performance data yet</p>
+                <p className="text-sm text-gray-400">Play matches to see your performance trends</p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

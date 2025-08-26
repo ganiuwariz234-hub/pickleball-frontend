@@ -17,6 +17,7 @@ import playerFinderReducer from './slices/playerFinderSlice'
 import courtReservationsReducer from './slices/courtReservationsSlice'
 import pendingReducer from './slices/pendingSlice'
 import digitalCredentialsReducer from './slices/digitalCredentialsSlice'
+import playerDashboardReducer from './slices/playerDashboardSlice'
 
 export const store = configureStore({
   reducer: {
@@ -30,14 +31,15 @@ export const store = configureStore({
     adminRankings: adminRankingsReducer,
     notifications: notificationsReducer,
     admin: adminReducer,
-                adminMessages: adminMessagesReducer,
-            affiliations: affiliationsReducer,
-            stats: statsReducer,
-            banners: bannersReducer,
+    adminMessages: adminMessagesReducer,
+    affiliations: affiliationsReducer,
+    stats: statsReducer,
+    banners: bannersReducer,
     playerFinder: playerFinderReducer,
     courtReservations: courtReservationsReducer,
     pending: pendingReducer,
     digitalCredentials: digitalCredentialsReducer,
+    playerDashboard: playerDashboardReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

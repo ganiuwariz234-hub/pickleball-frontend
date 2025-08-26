@@ -44,7 +44,7 @@ interface AffiliationData {
 }
 
 interface OverviewProps {
-  playerStats: PlayerStats;
+  playerStats: PlayerStats | null;
   profileCompletion: ProfileCompletion;
   affiliationData: AffiliationData;
 }
@@ -56,6 +56,21 @@ const Overview: React.FC<OverviewProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  // Default values when playerStats is null
+  const stats = playerStats || {
+    tournamentsPlayed: 0,
+    tournamentsWon: 0,
+    currentRanking: 0,
+    rankingChange: '+0',
+    totalPoints: 0,
+    matchesPlayed: 0,
+    winRate: 0,
+    nextTournament: 'No upcoming tournaments',
+    nextTournamentDate: '',
+    upcomingMatches: 0,
+    recentAchievements: []
+  };
+
   return (
     <div className="space-y-8">
       {/* Stats Grid */}
@@ -65,8 +80,8 @@ const Overview: React.FC<OverviewProps> = ({
             <h3 className="text-sm font-medium">Tournaments Won</h3>
             <Trophy className="h-4 w-4 text-yellow-500" />
           </div>
-          <div className="text-2xl font-bold text-yellow-600">{playerStats.tournamentsWon}</div>
-          <p className="text-xs text-gray-600">out of {playerStats.tournamentsPlayed} played</p>
+          <div className="text-2xl font-bold text-yellow-600">{stats.tournamentsWon}</div>
+          <p className="text-xs text-gray-600">out of {stats.tournamentsPlayed} played</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
@@ -74,8 +89,10 @@ const Overview: React.FC<OverviewProps> = ({
             <h3 className="text-sm font-medium">Current Ranking</h3>
             <Award className="h-4 w-4 text-blue-500" />
           </div>
-          <div className="text-2xl font-bold text-blue-600">#{playerStats.currentRanking}</div>
-          <p className="text-xs text-green-600">{playerStats.rankingChange} this month</p>
+          <div className="text-2xl font-bold text-blue-600">
+            {stats.currentRanking > 0 ? `#${stats.currentRanking}` : 'Unranked'}
+          </div>
+          <p className="text-xs text-green-600">{stats.rankingChange} this month</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
@@ -83,8 +100,8 @@ const Overview: React.FC<OverviewProps> = ({
             <h3 className="text-sm font-medium">Win Rate</h3>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </div>
-          <div className="text-2xl font-bold text-green-600">{playerStats.winRate}%</div>
-          <p className="text-xs text-gray-600">{playerStats.matchesPlayed} matches</p>
+          <div className="text-2xl font-bold text-green-600">{stats.winRate}%</div>
+          <p className="text-xs text-gray-600">{stats.matchesPlayed} matches</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
@@ -92,7 +109,7 @@ const Overview: React.FC<OverviewProps> = ({
             <h3 className="text-sm font-medium">Total Points</h3>
             <Target className="h-4 w-4 text-purple-500" />
           </div>
-          <div className="text-2xl font-bold text-purple-600">{playerStats.totalPoints}</div>
+          <div className="text-2xl font-bold text-purple-600">{stats.totalPoints}</div>
           <p className="text-xs text-gray-600">lifetime points</p>
         </div>
       </div>
@@ -125,6 +142,12 @@ const Overview: React.FC<OverviewProps> = ({
                       <span className="text-sm text-gray-700">
                         <strong>City:</strong> {affiliationData.location.city}
                       </span>
+                    </div>
+                  )}
+                  {!affiliationData.location.state && !affiliationData.location.city && (
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                      <span className="text-sm text-gray-500">Location not specified</span>
                     </div>
                   )}
                 </div>
@@ -266,6 +289,28 @@ const Overview: React.FC<OverviewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Recent Achievements */}
+      {stats.recentAchievements.length > 0 && (
+        <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 animate-on-scroll">
+          <div className="p-6 border-b border-gray-200">
+            <h3 className="text-lg font-semibold flex items-center space-x-2">
+              <Trophy className="h-5 w-5 text-yellow-500" />
+              <span>Recent Achievements</span>
+            </h3>
+          </div>
+          <div className="p-6">
+            <div className="space-y-3">
+              {stats.recentAchievements.map((achievement, index) => (
+                <div key={index} className="flex items-center space-x-3">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full flex-shrink-0"></div>
+                  <p className="text-sm text-gray-700">{achievement}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Quick Actions */}
       <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 animate-on-scroll">
