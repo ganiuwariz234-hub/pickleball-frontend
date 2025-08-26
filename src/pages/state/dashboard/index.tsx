@@ -2,20 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../../../store';
 import { 
-  fetchTournaments, 
-  fetchUpcomingTournaments 
-} from '../../../store/slices/tournamentsSlice';
-import { 
-  fetchClubs 
-} from '../../../store/slices/clubsSlice';
-import { 
-  fetchUsers, 
-  fetchPlayers 
-} from '../../../store/slices/usersSlice';
-import { 
-  fetchOverviewStats, 
-  fetchUserStats 
-} from '../../../store/slices/statsSlice';
+  fetchStateStats,
+  fetchStateTournaments,
+  fetchStateClubAffiliations,
+  fetchStateMemberVerifications,
+  fetchStateRecentMembers,
+  fetchStateAnnouncements,
+  fetchStateAnalytics,
+  fetchStateMicrosite
+} from '../../../store/slices/stateDashboardSlice';
 import Overview from './Overview';
 import Tournaments from './Tournaments';
 import ClubManagement from './ClubManagement';
@@ -29,29 +24,21 @@ const StateDashboard = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState('overview');
   
-  // Redux selectors for real data
-  const tournaments = useSelector((state: RootState) => state.tournaments.tournaments);
-  const tournamentsLoading = useSelector((state: RootState) => state.tournaments.loading);
-  const tournamentsError = useSelector((state: RootState) => state.tournaments.error);
-  
-  const clubs = useSelector((state: RootState) => state.clubs.clubs);
-  const clubsLoading = useSelector((state: RootState) => state.clubs.loading);
-  const clubsError = useSelector((state: RootState) => state.clubs.error);
-  
-  const users = useSelector((state: RootState) => state.users.users);
-  const usersLoading = useSelector((state: RootState) => state.users.loading);
-  const usersError = useSelector((state: RootState) => state.users.error);
-  
-  const overviewStats = useSelector((state: RootState) => state.stats.overviewStats);
-  const userStats = useSelector((state: RootState) => state.stats.userStats);
-  const statsLoading = useSelector((state: RootState) => state.stats.loading);
-  const statsError = useSelector((state: RootState) => state.stats.error);
-
-  // Helper function to safely parse IDs
-  const safeParseId = (id: string): number => {
-    const parsed = parseInt(id);
-    return isNaN(parsed) ? 0 : parsed;
-  };
+  // Redux selectors for state dashboard data
+  const {
+    stateStats,
+    tournaments,
+    clubAffiliations,
+    memberVerifications,
+    recentMembers,
+    recentAnnouncements,
+    analyticsData,
+    performanceData,
+    communicationsData,
+    micrositeConfig,
+    loading: stateDashboardLoading,
+    error: stateDashboardError
+  } = useSelector((state: RootState) => state.stateDashboard);
 
   // Helper function to ensure numeric values are valid
   const ensureValidNumber = (value: any, fallback: number = 0): number => {
@@ -63,203 +50,130 @@ const StateDashboard = () => {
 
   // Fetch data when component mounts and when specific tabs are activated
   useEffect(() => {
-    // Always fetch overview stats and user stats
-    dispatch(fetchOverviewStats());
-    dispatch(fetchUserStats());
-    
-    // Fetch players for member data (using public endpoint)
-    dispatch(fetchPlayers({ 
-      limit: 100,
-      page: 1 
-    }));
-  }, [dispatch]);
+    if (user?.state) {
+      // Always fetch state stats and analytics
+      dispatch(fetchStateStats(user.state));
+      dispatch(fetchStateAnalytics(user.state));
+      
+      // Fetch recent members and announcements
+      dispatch(fetchStateRecentMembers(user.state));
+      dispatch(fetchStateAnnouncements(user.state));
+    }
+  }, [dispatch, user?.state]);
 
   // Fetch tournaments when tournaments tab is clicked
   useEffect(() => {
-    if (activeTab === 'tournaments') {
-      dispatch(fetchTournaments({ 
-        tournament_type: 'state',
-        limit: 50,
-        page: 1 
-      }));
-      dispatch(fetchUpcomingTournaments(10));
-    }
-  }, [activeTab, dispatch]);
-
-  // Fetch clubs when clubs tab is clicked
-  useEffect(() => {
-    if (activeTab === 'clubs') {
-      dispatch(fetchClubs({ 
-        state: user?.state,
-        limit: 100,
-        page: 1 
-      }));
+    if (activeTab === 'tournaments' && user?.state) {
+      dispatch(fetchStateTournaments(user.state));
     }
   }, [activeTab, dispatch, user?.state]);
 
-  // Calculate derived statistics from real data with validation
-  const stateStats = {
-    totalMembers: ensureValidNumber(userStats?.total_users, 0),
-    activeMembers: ensureValidNumber(userStats?.active_users, 0),
-    totalClubs: ensureValidNumber(overviewStats?.total_clubs, 0),
-    totalCourts: (clubs || []).reduce((total, club) => {
-      const courtCount = club.court_count;
-      return total + (typeof courtCount === 'number' && !isNaN(courtCount) ? courtCount : 0);
-    }, 0),
-    totalTournaments: ensureValidNumber(overviewStats?.total_tournaments, 0),
-    monthlyRevenue: ensureValidNumber(overviewStats?.total_revenue, 0),
-    pendingApplications: (users || []).filter(user => user.membership_status === 'free').length,
-    upcomingEvents: (tournaments || []).filter(t => 
-      t.status === 'registration_open' || t.status === 'published'
-    ).length
-  };
-
-  // Validate and transform data with error handling
-  const getValidTournaments = () => {
-    try {
-      return (tournaments || []).filter(t => t && t.id && t.name);
-    } catch (error) {
-      console.error('Error filtering tournaments:', error);
-      return [];
+  // Fetch clubs when clubs tab is clicked
+  useEffect(() => {
+    if (activeTab === 'clubs' && user?.state) {
+      dispatch(fetchStateClubAffiliations(user.state));
     }
-  };
+  }, [activeTab, dispatch, user?.state]);
 
-  const getValidClubs = () => {
-    try {
-      return (clubs || []).filter(c => c && c.id && c.name);
-    } catch (error) {
-      console.error('Error filtering clubs:', error);
-      return [];
+  // Fetch verifications when verifications tab is clicked
+  useEffect(() => {
+    if (activeTab === 'verifications' && user?.state) {
+      dispatch(fetchStateMemberVerifications(user.state));
     }
-  };
-
-  const getValidUsers = () => {
-    try {
-      return (users || []).filter(u => u && u.id);
-    } catch (error) {
-      console.error('Error filtering users:', error);
-      return [];
-    }
-  };
+  }, [activeTab, dispatch, user?.state]);
 
   // Transform tournaments data for the component with validation
-  const transformedTournaments = getValidTournaments().map(tournament => ({
-    id: safeParseId(tournament.id),
+  const transformedTournaments = (tournaments || []).map(tournament => ({
+    id: tournament.id,
     name: tournament.name || 'Unnamed Tournament',
-    date: tournament.start_date || new Date().toISOString().split('T')[0],
-    location: tournament.venue_name || 'Location TBD',
-    participants: tournament.current_participants || 0,
-    maxParticipants: tournament.max_participants || 0,
-    entryFee: tournament.entry_fee || 0,
+    date: tournament.date || new Date().toISOString().split('T')[0],
+    location: tournament.location || 'Location TBD',
+    participants: tournament.participants || 0,
+    maxParticipants: tournament.maxParticipants || 0,
+    entryFee: tournament.entryFee || 0,
     status: tournament.status || 'draft',
     category: tournament.category || 'singles',
-    revenue: (tournament.entry_fee || 0) * (tournament.current_participants || 0)
+    revenue: (tournament.entryFee || 0) * (tournament.participants || 0)
   }));
 
   // Transform clubs data for the component with validation
-  const transformedClubAffiliations = getValidClubs().map(club => ({
-    id: safeParseId(club.id),
+  const transformedClubAffiliations = (clubAffiliations || []).map(club => ({
+    id: club.id,
     name: club.name || 'Unnamed Club',
     city: club.city || 'Unknown City',
-    members: club.member_count || 0,
-    status: club.membership_status === 'active' ? 'Active' : 
-            club.membership_status === 'pending' ? 'Pending Review' : 'Suspended',
-    complianceScore: club.membership_status === 'active' ? 95 :
-                    club.membership_status === 'pending' ? 60 : 30,
-    lastInspection: club.updated_at ? new Date(club.updated_at).toLocaleDateString() : 'Never',
-    nextInspection: club.updated_at ? 
-      new Date(new Date(club.updated_at).getTime() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString() :
-      new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-    issues: club.membership_status === 'active' ? 0 :
-            club.membership_status === 'pending' ? 2 : 5
+    members: club.members || 0,
+    status: club.status,
+    complianceScore: club.complianceScore,
+    lastInspection: club.lastInspection,
+    nextInspection: club.nextInspection,
+    issues: club.issues
   }));
 
   // Transform member verification data for the component with validation
-  const transformedMemberVerifications = getValidUsers().map(user => ({
-    id: safeParseId(user.id),
-    name: user.full_name || user.username || 'Unknown User',
-    type: user.user_type === 'player' ? 'Player' : 
-          user.user_type === 'coach' ? 'Coach' : 
-          user.user_type === 'club' ? 'Club Manager' : 'Tournament Director',
-    club: user.club?.name || 'Independent',
-    submitted: user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Never',
-    status: user.membership_status === 'basic' || user.membership_status === 'premium' ? 'Verified' : 'Pending',
-    documents: user.verification_documents ? ['ID Card', 'Verification'] : ['ID Card'],
-    verifiedBy: user.membership_status === 'basic' || user.membership_status === 'premium' ? 'System' : null,
-    verifiedDate: user.membership_status === 'basic' || user.membership_status === 'premium' ? 
-      (user.updated_at ? new Date(user.updated_at).toLocaleDateString() : 'Never') : null
+  const transformedMemberVerifications = (memberVerifications || []).map(user => ({
+    id: user.id,
+    name: user.name,
+    type: user.type,
+    club: user.club,
+    submitted: user.submitted,
+    status: user.status,
+    documents: user.documents,
+    verifiedBy: user.verifiedBy,
+    verifiedDate: user.verifiedDate
   }));
 
   // Transform recent members data with validation
-  const recentMembers = getValidUsers()
-    .filter(user => user.user_type === 'player')
+  const transformedRecentMembers = (recentMembers || [])
     .sort((a, b) => {
       try {
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        return new Date(b.joinDate || 0).getTime() - new Date(a.joinDate || 0).getTime();
       } catch (error) {
         console.error('Error sorting users by date:', error);
         return 0;
       }
     })
-    .slice(0, 5)
-    .map(user => ({
-      id: safeParseId(user.id),
-      name: user.full_name || user.username || 'Unknown User',
-      type: user.user_type || 'player',
-      club: user.club?.name || 'Independent',
-      joinDate: user.created_at || new Date().toISOString().split('T')[0],
-      status: user.membership_status || 'pending',
-      photo: user.profile_photo
-    }));
+    .slice(0, 5);
 
   // Transform recent announcements with validation
-  const recentAnnouncements = getValidTournaments()
-    .filter(t => t.status === 'published' || t.status === 'registration_open')
-    .slice(0, 5)
-    .map(tournament => ({
-      id: safeParseId(tournament.id),
-      title: tournament.name || 'Untitled Tournament',
-      date: tournament.start_date || new Date().toISOString().split('T')[0],
-      priority: tournament.status === 'registration_open' ? 'High' : 'Medium',
-      category: 'Tournament'
-    }));
+  const transformedAnnouncements = (recentAnnouncements || [])
+    .slice(0, 5);
 
   // Analytics data derived from real data
-  const analyticsData = {
-    memberGrowth: ensureValidNumber(userStats && userStats.total_users > 0 ? ((userStats.total_users - (userStats.total_users * 0.9)) / (userStats.total_users * 0.9)) * 100 : 0, 0),
-    revenueGrowth: ensureValidNumber(overviewStats && overviewStats.total_revenue > 0 ? ((overviewStats.total_revenue - (overviewStats.total_revenue * 0.9)) / (overviewStats.total_revenue * 0.9)) * 100 : 0, 0),
+  const derivedAnalyticsData = {
+    memberGrowth: ensureValidNumber(stateStats && stateStats.totalMembers > 0 ? ((stateStats.totalMembers - (stateStats.totalMembers * 0.9)) / (stateStats.totalMembers * 0.9)) * 100 : 0, 0),
+    revenueGrowth: ensureValidNumber(stateStats && stateStats.monthlyRevenue > 0 ? ((stateStats.monthlyRevenue - (stateStats.monthlyRevenue * 0.9)) / (stateStats.monthlyRevenue * 0.9)) * 100 : 0, 0),
     tournamentParticipation: ensureValidNumber((() => {
-      const totalParticipants = (tournaments || []).reduce((total, t) => total + (t.current_participants || 0), 0);
-      const totalMaxParticipants = (tournaments || []).reduce((total, t) => total + (t.max_participants || 0), 0);
+      const totalParticipants = (tournaments || []).reduce((total, t) => total + (t.participants || 0), 0);
+      const totalMaxParticipants = (tournaments || []).reduce((total, t) => total + (t.maxParticipants || 0), 0);
       return totalMaxParticipants > 0 ? (totalParticipants / totalMaxParticipants) * 100 : 0;
     })(), 0),
     clubCompliance: ensureValidNumber((() => {
-      const activeClubs = (clubs || []).filter(c => c.membership_status === 'active').length;
-      const totalClubs = (clubs || []).length;
+      const activeClubs = (clubAffiliations || []).filter(c => c.status === 'Active').length;
+      const totalClubs = (clubAffiliations || []).length;
       return totalClubs > 0 ? (activeClubs / totalClubs) * 100 : 0;
     })(), 0),
     monthlyTrends: [45, 52, 48, 67, 73, 89, 95, 87, 92, 98, 105, 112] // Placeholder - would need time-series API
   };
 
   // Communications data derived from real data
-  const communicationsData = {
-    totalAnnouncements: recentAnnouncements.length,
+  const derivedCommunicationsData = {
+    totalAnnouncements: transformedAnnouncements.length,
     scheduledMessages: (tournaments || []).filter(t => t.status === 'published').length,
     memberEngagement: 78.5, // Placeholder - would need engagement API
     responseRate: 92.3, // Placeholder - would need response API
-    recentMessages: recentAnnouncements.map(announcement => ({
-      id: safeParseId(announcement.id.toString()),
+    recentMessages: transformedAnnouncements.map(announcement => ({
+      id: announcement.id,
       type: 'Announcement',
       title: announcement.title,
       sentDate: announcement.date,
-      recipients: stateStats.totalMembers,
-      opened: Math.floor(stateStats.totalMembers * 0.7), // Placeholder
-      clicked: Math.floor(stateStats.totalMembers * 0.2) // Placeholder
+      recipients: stateStats?.totalMembers || 0,
+      opened: Math.floor((stateStats?.totalMembers || 0) * 0.7), // Placeholder
+      clicked: Math.floor((stateStats?.totalMembers || 0) * 0.2) // Placeholder
     }))
   };
 
   // Microsite configuration data
-  const micrositeConfig = {
+  const derivedMicrositeConfig = micrositeConfig || {
     stateName: `${user?.state || 'State'} Pickleball Federation`,
     description: `Official state representative for ${user?.state || 'State'} Pickleball Federation with authority to organize state-level tournaments`,
     logo: user?.logo || 'https://example.com/state-logo.png',
@@ -284,66 +198,59 @@ const StateDashboard = () => {
   };
 
   // Performance analytics data
-  const performanceData = {
+  const derivedPerformanceData = {
     memberGrowth: {
-      thisYear: userStats?.total_users || 0,
-      lastYear: Math.floor((userStats?.total_users || 0) * 0.9),
-      growth: analyticsData.memberGrowth
+      thisYear: stateStats?.totalMembers || 0,
+      lastYear: Math.floor((stateStats?.totalMembers || 0) * 0.9),
+      growth: derivedAnalyticsData.memberGrowth
     },
     revenueGrowth: {
-      thisYear: overviewStats?.total_revenue || 0,
-      lastYear: Math.floor((overviewStats?.total_revenue || 0) * 0.9),
-      growth: analyticsData.revenueGrowth
+      thisYear: stateStats?.monthlyRevenue || 0,
+      lastYear: Math.floor((stateStats?.monthlyRevenue || 0) * 0.9),
+      growth: derivedAnalyticsData.revenueGrowth
     },
     tournamentGrowth: {
-      thisYear: overviewStats?.total_tournaments || 0,
-      lastYear: Math.floor((overviewStats?.total_tournaments || 0) * 0.8),
+      thisYear: stateStats?.totalTournaments || 0,
+      lastYear: Math.floor((stateStats?.totalTournaments || 0) * 0.8),
       growth: ensureValidNumber((() => {
-        const thisYear = overviewStats?.total_tournaments || 0;
+        const thisYear = stateStats?.totalTournaments || 0;
         const lastYear = Math.floor(thisYear * 0.8);
         return lastYear > 0 ? ((thisYear - lastYear) / lastYear) * 100 : 0;
       })(), 0)
     },
     monthlyTrends: [
-      { month: 'Jan', members: Math.floor((userStats?.total_users || 0) * 0.95), revenue: Math.floor((overviewStats?.total_revenue || 0) * 0.1) },
-      { month: 'Feb', members: Math.floor((userStats?.total_users || 0) * 0.97), revenue: Math.floor((overviewStats?.total_revenue || 0) * 0.1) },
-      { month: 'Mar', members: userStats?.total_users || 0, revenue: Math.floor((overviewStats?.total_revenue || 0) * 0.1) },
+      { month: 'Jan', members: Math.floor((stateStats?.totalMembers || 0) * 0.95), revenue: Math.floor((stateStats?.monthlyRevenue || 0) * 0.1) },
+      { month: 'Feb', members: Math.floor((stateStats?.totalMembers || 0) * 0.97), revenue: Math.floor((stateStats?.monthlyRevenue || 0) * 0.1) },
+      { month: 'Mar', members: stateStats?.totalMembers || 0, revenue: Math.floor((stateStats?.monthlyRevenue || 0) * 0.1) },
       { month: 'Apr', members: 0, revenue: 0 }
     ]
   };
 
   // Loading states
-  const isLoading = statsLoading || (activeTab === 'tournaments' && tournamentsLoading) || 
-                   (activeTab === 'clubs' && clubsLoading) || 
-                   (activeTab === 'overview' && usersLoading);
+  const isLoading = stateDashboardLoading;
  
   // Error states
-  const hasError = statsError || tournamentsError || clubsError || usersError;
+  const hasError = stateDashboardError;
 
   // Refresh function
   const handleRefresh = () => {
-    dispatch(fetchOverviewStats());
-    dispatch(fetchUserStats());
-    dispatch(fetchPlayers({ 
-      limit: 100,
-      page: 1 
-    }));
-    
-    if (activeTab === 'tournaments') {
-      dispatch(fetchTournaments({ 
-        tournament_type: 'state',
-        limit: 50,
-        page: 1 
-      }));
-      dispatch(fetchUpcomingTournaments(10));
+    if (user?.state) {
+      dispatch(fetchStateStats(user.state));
+      dispatch(fetchStateAnalytics(user.state));
+      dispatch(fetchStateRecentMembers(user.state));
+      dispatch(fetchStateAnnouncements(user.state));
     }
     
-    if (activeTab === 'clubs') {
-      dispatch(fetchClubs({ 
-        state: user?.state,
-        limit: 100,
-        page: 1 
-      }));
+    if (activeTab === 'tournaments' && user?.state) {
+      dispatch(fetchStateTournaments(user.state));
+    }
+    
+    if (activeTab === 'clubs' && user?.state) {
+      dispatch(fetchStateClubAffiliations(user.state));
+    }
+
+    if (activeTab === 'verifications' && user?.state) {
+      dispatch(fetchStateMemberVerifications(user.state));
     }
   };
 
@@ -458,7 +365,7 @@ const StateDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Total Members</p>
-                  <p className="text-2xl font-bold text-blue-600">{stateStats.totalMembers.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-blue-600">{stateStats?.totalMembers?.toLocaleString() || 0}</p>
                 </div>
                 <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
                   <span className="text-blue-600 text-lg font-semibold">👥</span>
@@ -470,7 +377,7 @@ const StateDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Active Clubs</p>
-                  <p className="text-2xl font-bold text-green-600">{stateStats.totalClubs}</p>
+                  <p className="text-2xl font-bold text-green-600">{clubAffiliations?.filter(c => c.status === 'Active').length || 0}</p>
                 </div>
                 <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
                   <span className="text-green-600 text-lg font-semibold">🏢</span>
@@ -482,7 +389,7 @@ const StateDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                  <p className="text-2xl font-bold text-purple-600">${stateStats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-purple-600">${stateStats?.monthlyRevenue?.toLocaleString() || 0}</p>
                 </div>
                 <div className="h-8 w-8 bg-purple-100 rounded-full flex items-center justify-center">
                   <span className="text-purple-600 text-lg font-semibold">💰</span>
@@ -494,7 +401,7 @@ const StateDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Pending Applications</p>
-                  <p className="text-2xl font-bold text-orange-600">{stateStats.pendingApplications}</p>
+                  <p className="text-2xl font-bold text-orange-600">{stateStats?.pendingApplications || 0}</p>
                 </div>
                 <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
                   <span className="text-orange-600 text-lg font-semibold">⏳</span>
@@ -589,18 +496,9 @@ const StateDashboard = () => {
                   <LoadingSkeleton />
                 ) : (
                   <Overview 
-                    stateStats={{
-                      totalMembers: ensureValidNumber(stateStats.totalMembers, 0),
-                      activeMembers: ensureValidNumber(stateStats.activeMembers, 0),
-                      totalClubs: ensureValidNumber(stateStats.totalClubs, 0),
-                      totalCourts: ensureValidNumber(stateStats.totalCourts, 0),
-                      totalTournaments: ensureValidNumber(stateStats.totalTournaments, 0),
-                      monthlyRevenue: ensureValidNumber(stateStats.monthlyRevenue, 0),
-                      pendingApplications: ensureValidNumber(stateStats.pendingApplications, 0),
-                      upcomingEvents: ensureValidNumber(stateStats.upcomingEvents, 0)
-                    }}
-                    recentMembers={recentMembers}
-                    recentAnnouncements={recentAnnouncements}
+                    stateStats={stateStats}
+                    recentMembers={transformedRecentMembers}
+                    recentAnnouncements={transformedAnnouncements}
                   />
                 )}
               </div>
@@ -609,10 +507,13 @@ const StateDashboard = () => {
             {/* Tournaments Tab */}
             {activeTab === 'tournaments' && (
               <div className="animate-on-scroll">
-                {tournamentsLoading ? (
+                {/* The original code had tournamentsLoading and tournamentsError, which are no longer defined.
+                    Assuming they are meant to be stateDashboardLoading and stateDashboardError respectively
+                    for the tournaments data fetching. */}
+                {isLoading ? (
                   <LoadingSkeleton />
-                ) : tournamentsError ? (
-                  <ErrorDisplay error={tournamentsError} />
+                ) : hasError ? (
+                  <ErrorDisplay error={hasError} />
                 ) : transformedTournaments.length === 0 ? (
                   <EmptyState message="No tournaments found for this state. Create a new tournament to get started." />
                 ) : (
@@ -624,10 +525,13 @@ const StateDashboard = () => {
             {/* Clubs Tab */}
             {activeTab === 'clubs' && (
               <div className="animate-on-scroll">
-                {clubsLoading ? (
+                {/* The original code had clubsLoading and clubsError, which are no longer defined.
+                    Assuming they are meant to be stateDashboardLoading and stateDashboardError respectively
+                    for the clubs data fetching. */}
+                {isLoading ? (
                   <LoadingSkeleton />
-                ) : clubsError ? (
-                  <ErrorDisplay error={clubsError} />
+                ) : hasError ? (
+                  <ErrorDisplay error={hasError} />
                 ) : transformedClubAffiliations.length === 0 ? (
                   <EmptyState message="No clubs found in this state. Encourage local clubs to register with the federation." />
                 ) : (
@@ -639,10 +543,13 @@ const StateDashboard = () => {
             {/* Verifications Tab */}
             {activeTab === 'verifications' && (
               <div className="animate-on-scroll">
-                {usersLoading ? (
+                {/* The original code had usersLoading and usersError, which are no longer defined.
+                    Assuming they are meant to be stateDashboardLoading and stateDashboardError respectively
+                    for the member verifications data fetching. */}
+                {isLoading ? (
                   <LoadingSkeleton />
-                ) : usersError ? (
-                  <ErrorDisplay error={usersError} />
+                ) : hasError ? (
+                  <ErrorDisplay error={hasError} />
                 ) : transformedMemberVerifications.length === 0 ? (
                   <EmptyState message="No verification requests found. Members will appear here when they submit verification documents." />
                 ) : (
@@ -654,21 +561,21 @@ const StateDashboard = () => {
             {/* Microsite Tab */}
             {activeTab === 'microsite' && (
               <div className="animate-on-scroll">
-                <Microsite micrositeConfig={micrositeConfig} />
+                <Microsite micrositeConfig={derivedMicrositeConfig} />
               </div>
             )}
 
             {/* Analytics Tab */}
             {activeTab === 'analytics' && (
               <div className="animate-on-scroll">
-                {statsLoading ? (
+                {isLoading ? (
                   <LoadingSkeleton />
-                ) : statsError ? (
-                  <ErrorDisplay error={statsError} />
-                ) : !overviewStats && !userStats ? (
+                ) : hasError ? (
+                  <ErrorDisplay error={hasError} />
+                ) : !stateStats ? (
                   <EmptyState message="No analytics data available. Data will appear here once the federation starts collecting information." />
                 ) : (
-                  <Analytics performanceData={performanceData} stateStats={stateStats} />
+                  <Analytics performanceData={derivedPerformanceData} stateStats={stateStats} />
                 )}
               </div>
             )}
@@ -681,7 +588,7 @@ const StateDashboard = () => {
                 ) : (
                   <Communications 
                     stateStats={stateStats}
-                    recentAnnouncements={recentAnnouncements}
+                    recentAnnouncements={transformedAnnouncements}
                   />
                 )}
               </div>

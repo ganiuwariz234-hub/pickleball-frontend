@@ -18,6 +18,11 @@ import courtReservationsReducer from './slices/courtReservationsSlice'
 import pendingReducer from './slices/pendingSlice'
 import digitalCredentialsReducer from './slices/digitalCredentialsSlice'
 import playerDashboardReducer from './slices/playerDashboardSlice'
+import coachDashboardReducer from './slices/coachDashboardSlice'
+import clubDashboardReducer from './slices/clubDashboardSlice'
+import partnerDashboardReducer from './slices/partnerDashboardSlice'
+import stateDashboardReducer from './slices/stateDashboardSlice'
+import adminDashboardReducer from './slices/adminDashboardSlice'
 
 export const store = configureStore({
   reducer: {
@@ -40,6 +45,11 @@ export const store = configureStore({
     pending: pendingReducer,
     digitalCredentials: digitalCredentialsReducer,
     playerDashboard: playerDashboardReducer,
+    coachDashboard: coachDashboardReducer,
+    clubDashboard: clubDashboardReducer,
+    partnerDashboard: partnerDashboardReducer,
+    stateDashboard: stateDashboardReducer,
+    adminDashboard: adminDashboardReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

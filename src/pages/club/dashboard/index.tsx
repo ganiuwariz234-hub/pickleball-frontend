@@ -1,6 +1,18 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../../store';
+import { AppDispatch } from '../../../store';
+import { 
+  fetchClubStats, 
+  fetchClubMembers, 
+  fetchClubTournaments, 
+  fetchCourtBookings, 
+  fetchClubInvoices, 
+  fetchMicrositeConfig, 
+  fetchUpcomingEvents, 
+  fetchCourtStatus, 
+  fetchTimeSlots 
+} from '../../../store/slices/clubDashboardSlice';
 
 // Import dashboard components
 import Overview from './Overview';
@@ -12,352 +24,79 @@ import Reports from './Reports';
 import Members from './Members';
 
 const ClubDashboard = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { 
+    clubStats, 
+    members, 
+    tournaments, 
+    courtBookings, 
+    invoices, 
+    micrositeConfig, 
+    upcomingEvents, 
+    courtStatus, 
+    timeSlots,
+    loading,
+    error 
+  } = useSelector((state: RootState) => state.clubDashboard);
+  
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCourt, setSelectedCourt] = useState('all');
 
-  // Mock data - in real app this would come from API
-  const clubStats = {
-    totalMembers: 156,
-    activeMembers: 142,
-    totalCourts: 8,
-    availableCourts: 3,
-    upcomingEvents: 4,
-    monthlyRevenue: 12500,
-    averageRating: 4.6,
-    totalReviews: 234,
-    recentActivities: [
-      'New member registration - Sarah M.',
-      'Tournament registration - Spring Championship',
-      'Court maintenance completed - Court 3',
-      'Monthly membership renewal - 23 members'
-    ]
-  };
-
-  const recentMembers = [
-    {
-      id: 1,
-      name: 'Sarah M.',
-      email: 'sarah.m@email.com',
-      phone: '+52-33-1234-5678',
-      type: 'Premium' as const,
-      status: 'Active' as const,
-      joinDate: '2024-03-20',
-      lastVisit: '2024-03-25',
-      totalVisits: 45,
-      photo: null,
-      membershipExpiry: '2025-03-20',
-      emergencyContact: 'John M. - +52-33-1234-5679',
-      notes: 'Excellent player, interested in tournaments'
-    },
-    {
-      id: 2,
-      name: 'Mike R.',
-      email: 'mike.r@email.com',
-      phone: '+52-33-1234-5680',
-      type: 'Basic' as const,
-      status: 'Active' as const,
-      joinDate: '2024-03-18',
-      lastVisit: '2024-03-24',
-      totalVisits: 23,
-      photo: null,
-      membershipExpiry: '2025-03-18',
-      emergencyContact: 'Lisa R. - +52-33-1234-5681',
-      notes: 'New member, learning the game'
-    },
-    {
-      id: 3,
-      name: 'Lisa K.',
-      email: 'lisa.k@email.com',
-      phone: '+52-33-1234-5682',
-      type: 'Premium' as const,
-      status: 'Active' as const,
-      joinDate: '2024-03-15',
-      lastVisit: '2024-03-25',
-      totalVisits: 67,
-      photo: null,
-      membershipExpiry: '2025-03-15',
-      emergencyContact: 'David K. - +52-33-1234-5683',
-      notes: 'Advanced player, club champion 2023'
-    },
-    {
-      id: 4,
-      name: 'Carlos R.',
-      email: 'carlos.r@email.com',
-      phone: '+52-33-1234-5684',
-      type: 'VIP' as const,
-      status: 'Active' as const,
-      joinDate: '2024-02-15',
-      lastVisit: '2024-03-25',
-      totalVisits: 89,
-      photo: null,
-      membershipExpiry: '2025-02-15',
-      emergencyContact: 'Maria R. - +52-33-1234-5685',
-      notes: 'VIP member, premium court access'
-    },
-    {
-      id: 5,
-      name: 'Ana M.',
-      email: 'ana.m@email.com',
-      phone: '+52-33-1234-5686',
-      type: 'Basic' as const,
-      status: 'Active' as const,
-      joinDate: '2024-03-10',
-      lastVisit: '2024-03-23',
-      totalVisits: 12,
-      photo: null,
-      membershipExpiry: '2025-03-10',
-      emergencyContact: 'Jose M. - +52-33-1234-5687',
-      notes: 'Beginner player, taking lessons'
+  // Fetch all dashboard data on component mount
+  useEffect(() => {
+    if (user?.club_id) {
+      dispatch(fetchClubStats(user.club_id));
+      dispatch(fetchClubMembers(user.club_id));
+      dispatch(fetchClubTournaments(user.club_id));
+      dispatch(fetchCourtBookings({ clubId: user.club_id, date: selectedDate }));
+      dispatch(fetchClubInvoices(user.club_id));
+      dispatch(fetchMicrositeConfig(user.club_id));
+      dispatch(fetchUpcomingEvents(user.club_id));
+      dispatch(fetchCourtStatus(user.club_id));
+      dispatch(fetchTimeSlots(user.club_id));
     }
-  ];
+  }, [dispatch, user?.club_id, selectedDate]);
 
-  // Tournament management data
-  const tournaments = [
-    {
-      id: 1,
-      name: 'Spring Championship Tournament',
-      date: '2024-04-20',
-      startTime: '9:00 AM',
-      endTime: '6:00 PM',
-      participants: 48,
-      maxParticipants: 64,
-      entryFee: 75,
-      totalRevenue: 3600,
-      expenses: 1200,
-      profit: 2400,
-      status: 'Registration Open',
-      description: 'Annual spring championship tournament with multiple divisions',
-      location: 'Elite Pickleball Club - Main Courts',
-      tournamentType: 'doubles' as const,
-      skillLevel: 'all',
-      prizes: 'Cash prizes for winners, trophies for top 3',
-      rules: 'USAPA rules apply, double elimination format'
-    },
-    {
-      id: 2,
-      name: 'Summer League Finals',
-      date: '2024-06-15',
-      startTime: '10:00 AM',
-      endTime: '4:00 PM',
-      participants: 32,
-      maxParticipants: 32,
-      entryFee: 50,
-      totalRevenue: 1600,
-      expenses: 800,
-      profit: 800,
-      status: 'Full',
-      description: 'Summer league championship finals',
-      location: 'Elite Pickleball Club - All Courts',
-      tournamentType: 'singles' as const,
-      skillLevel: 'intermediate',
-      prizes: 'League championship trophies and medals',
-      rules: 'Round robin format, top 4 advance to playoffs'
-    },
-    {
-      id: 3,
-      name: 'Fall Classic',
-      date: '2024-09-28',
-      startTime: '9:00 AM',
-      endTime: '5:00 PM',
-      participants: 0,
-      maxParticipants: 48,
-      entryFee: 60,
-      totalRevenue: 0,
-      expenses: 0,
-      profit: 0,
-      status: 'Planning',
-      description: 'Fall season tournament for all skill levels',
-      location: 'Elite Pickleball Club - Main Courts',
-      tournamentType: 'mixed' as const,
-      skillLevel: 'all',
-      prizes: 'Trophies and gift certificates for winners',
-      rules: 'Mixed doubles format, skill-based divisions'
-    }
-  ];
+  // Loading state
+  if (loading && !clubStats) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // Court rental data
-  const timeSlots = [
-    '6:00 AM', '7:00 AM', '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-    '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM',
-    '6:00 PM', '7:00 PM', '8:00 PM', '9:00 PM', '10:00 PM'
-  ];
+  // Error state
+  if (error && !clubStats) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong className="font-bold">Error:</strong>
+            <span className="block sm:inline"> {error}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  const courtBookings: Record<string, Record<string, {
-    status: 'available' | 'booked' | 'maintenance' | 'reserved';
-    price: number;
-    player?: string;
-    startTime: string;
-    endTime: string;
-    bookingId?: string;
-  }>> = {
-    'Court 1': {
-      '6:00 AM': { status: 'available', price: 25, startTime: '6:00 AM', endTime: '7:00 AM' },
-      '7:00 AM': { status: 'booked', price: 25, player: 'John D.', startTime: '7:00 AM', endTime: '8:00 AM', bookingId: 'BK001' },
-      '8:00 AM': { status: 'available', price: 25, startTime: '8:00 AM', endTime: '9:00 AM' },
-      '9:00 AM': { status: 'booked', price: 30, player: 'Sarah M.', startTime: '9:00 AM', endTime: '10:00 AM', bookingId: 'BK002' },
-      '10:00 AM': { status: 'available', price: 30, startTime: '10:00 AM', endTime: '11:00 AM' },
-      '11:00 AM': { status: 'available', price: 30, startTime: '11:00 AM', endTime: '12:00 PM' },
-      '12:00 PM': { status: 'booked', price: 35, player: 'Mike R.', startTime: '12:00 PM', endTime: '1:00 PM', bookingId: 'BK003' },
-      '1:00 PM': { status: 'available', price: 35, startTime: '1:00 PM', endTime: '2:00 PM' },
-      '2:00 PM': { status: 'available', price: 35, startTime: '2:00 PM', endTime: '3:00 PM' },
-      '3:00 PM': { status: 'booked', price: 30, player: 'Lisa K.', startTime: '3:00 PM', endTime: '4:00 PM', bookingId: 'BK004' },
-      '4:00 PM': { status: 'available', price: 30, startTime: '4:00 PM', endTime: '5:00 PM' },
-      '5:00 PM': { status: 'available', price: 30, startTime: '5:00 PM', endTime: '6:00 PM' },
-      '6:00 PM': { status: 'booked', price: 35, player: 'Carlos R.', startTime: '6:00 PM', endTime: '7:00 PM', bookingId: 'BK005' },
-      '7:00 PM': { status: 'booked', price: 35, player: 'Ana M.', startTime: '7:00 PM', endTime: '8:00 PM', bookingId: 'BK006' },
-      '8:00 PM': { status: 'available', price: 30, startTime: '8:00 PM', endTime: '9:00 PM' },
-      '9:00 PM': { status: 'available', price: 25, startTime: '9:00 PM', endTime: '10:00 PM' },
-      '10:00 PM': { status: 'available', price: 20, startTime: '10:00 PM', endTime: '11:00 PM' }
-    },
-    'Court 2': {
-      '6:00 AM': { status: 'available', price: 25, startTime: '6:00 AM', endTime: '7:00 AM' },
-      '7:00 AM': { status: 'available', price: 25, startTime: '7:00 AM', endTime: '8:00 AM' },
-      '8:00 AM': { status: 'booked', price: 25, player: 'David L.', startTime: '8:00 AM', endTime: '9:00 AM', bookingId: 'BK007' },
-      '9:00 AM': { status: 'available', price: 30, startTime: '9:00 AM', endTime: '10:00 AM' },
-      '10:00 AM': { status: 'booked', price: 30, player: 'Emma S.', startTime: '10:00 AM', endTime: '11:00 AM', bookingId: 'BK008' },
-      '11:00 AM': { status: 'available', price: 30, startTime: '11:00 AM', endTime: '12:00 PM' },
-      '12:00 PM': { status: 'available', price: 35, startTime: '12:00 PM', endTime: '1:00 PM' },
-      '1:00 PM': { status: 'booked', price: 35, player: 'Robert K.', startTime: '1:00 PM', endTime: '2:00 PM', bookingId: 'BK009' },
-      '2:00 PM': { status: 'booked', price: 35, player: 'Maria G.', startTime: '2:00 PM', endTime: '3:00 PM', bookingId: 'BK010' },
-      '3:00 PM': { status: 'available', price: 30, startTime: '3:00 PM', endTime: '4:00 PM' },
-      '4:00 PM': { status: 'available', price: 30, startTime: '4:00 PM', endTime: '5:00 PM' },
-      '5:00 PM': { status: 'booked', price: 30, player: 'Tom H.', startTime: '5:00 PM', endTime: '6:00 PM', bookingId: 'BK011' },
-      '6:00 PM': { status: 'available', price: 35, startTime: '6:00 PM', endTime: '7:00 PM' },
-      '7:00 PM': { status: 'available', price: 35, startTime: '7:00 PM', endTime: '8:00 PM' },
-      '8:00 PM': { status: 'available', price: 30, startTime: '8:00 PM', endTime: '9:00 PM' },
-      '9:00 PM': { status: 'available', price: 25, startTime: '9:00 PM', endTime: '10:00 PM' },
-      '10:00 PM': { status: 'available', price: 20, startTime: '10:00 PM', endTime: '11:00 PM' }
-    }
-  };
 
-  // Invoice and payment data
-  const invoices = [
-    {
-      id: 'INV-001',
-      member: 'Sarah M.',
-      type: 'Membership Renewal',
-      amount: 120,
-      status: 'Paid',
-      dueDate: '2024-03-15',
-      paidDate: '2024-03-14'
-    },
-    {
-      id: 'INV-002',
-      member: 'Mike R.',
-      type: 'Court Rental',
-      amount: 35,
-      status: 'Paid',
-      dueDate: '2024-03-20',
-      paidDate: '2024-03-20'
-    },
-    {
-      id: 'INV-003',
-      member: 'Lisa K.',
-      type: 'Tournament Registration',
-      amount: 75,
-      status: 'Pending',
-      dueDate: '2024-04-01',
-      paidDate: null
-    },
-    {
-      id: 'INV-004',
-      member: 'John D.',
-      type: 'Court Rental',
-      amount: 25,
-      status: 'Overdue',
-      dueDate: '2024-03-10',
-      paidDate: null
-    }
-  ];
 
-  // Club microsite configuration data
-  const micrositeConfig = {
-    clubName: 'Elite Pickleball Club',
-    description: 'Premium pickleball facility with professional courts and training programs',
-    logo: 'https://example.com/logo.png',
-    bannerImage: 'https://example.com/banner.jpg',
-    contactInfo: {
-      phone: '+52-33-1234-5678',
-      email: 'info@elitepickleball.com',
-      address: 'Av. Vallarta 1234, Guadalajara, Jalisco',
-      website: 'https://www.elitepickleball.com'
-    },
-    socialMedia: {
-      facebook: 'https://facebook.com/elitepickleball',
-      instagram: 'https://instagram.com/elitepickleball',
-      twitter: 'https://twitter.com/elitepickleball'
-    },
-    features: {
-      courts: 8,
-      training: true,
-      tournaments: true,
-      equipment: true,
-      proShop: true
-    }
-  };
 
-  const upcomingEvents = [
-    {
-      id: 1,
-      title: 'Spring Championship Tournament',
-      date: '2024-04-20',
-      time: '9:00 AM',
-      participants: 48,
-      type: 'Tournament',
-      status: 'Registration Open'
-    },
-    {
-      id: 2,
-      title: 'Beginner Clinic',
-      date: '2024-03-30',
-      time: '10:00 AM',
-      participants: 12,
-      type: 'Training',
-      status: 'Registration Open'
-    },
-    {
-      id: 3,
-      title: 'Advanced Strategy Workshop',
-      date: '2024-04-05',
-      time: '2:00 PM',
-      participants: 8,
-      type: 'Training',
-      status: 'Full'
-    }
-  ];
 
-  const courtStatus = [
-    {
-      id: 1,
-      name: 'Court 1',
-      status: 'Available',
-      currentTime: '2:30 PM',
-      nextBooking: '3:00 PM'
-    },
-    {
-      id: 2,
-      name: 'Court 2',
-      status: 'Occupied',
-      currentTime: '2:30 PM',
-      nextBooking: '3:00 PM'
-    },
-    {
-      id: 3,
-      name: 'Court 3',
-      status: 'Maintenance',
-      currentTime: '2:30 PM',
-      nextBooking: '4:00 PM'
-    },
-    {
-      id: 4,
-      name: 'Court 4',
-      status: 'Available',
-      currentTime: '2:30 PM',
-      nextBooking: '3:30 PM'
-    }
-  ];
+
+
+
+
+
+
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -499,7 +238,7 @@ const ClubDashboard = () => {
           <div className="px-6 py-6 min-h-[400px]">
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-              <Overview clubStats={clubStats} courtStatus={courtStatus} />
+              <Overview clubStats={clubStats} courtStatus={courtStatus || []} />
             )}
 
             {/* Court Rental Tab */}
@@ -509,19 +248,19 @@ const ClubDashboard = () => {
                 setSelectedDate={setSelectedDate}
                 selectedCourt={selectedCourt}
                 setSelectedCourt={setSelectedCourt}
-                timeSlots={timeSlots}
-                courtBookings={courtBookings}
+                timeSlots={timeSlots || []}
+                courtBookings={courtBookings || {}}
               />
             )}
 
             {/* Tournaments Tab */}
             {activeTab === 'tournaments' && (
-              <Tournaments tournaments={tournaments} />
+              <Tournaments tournaments={tournaments || []} />
             )}
 
             {/* Invoices Tab */}
             {activeTab === 'invoices' && (
-              <Invoices invoices={invoices} />
+              <Invoices invoices={invoices || []} />
             )}
 
             {/* Microsite Tab */}
@@ -536,7 +275,7 @@ const ClubDashboard = () => {
 
             {/* Members Tab */}
             {activeTab === 'members' && (
-              <Members members={recentMembers} />
+              <Members members={members || []} />
             )}
           </div>
         </div>
@@ -555,7 +294,7 @@ const ClubDashboard = () => {
             </div>
             <div className="px-6 py-4">
               <div className="space-y-4">
-                {upcomingEvents.map((event) => (
+                {(upcomingEvents || []).map((event) => (
                   <div key={event.id} className="animate-on-scroll flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className={`animate-on-scroll w-10 h-10 rounded-full flex items-center justify-center ${
@@ -604,7 +343,7 @@ const ClubDashboard = () => {
             </div>
             <div className="px-6 py-4">
               <div className="space-y-4">
-                {recentMembers.slice(0, 3).map((member) => (
+                {members.slice(0, 3).map((member) => (
                   <div key={member.id} className="animate-on-scroll flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0 h-10 w-10">
