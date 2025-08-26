@@ -106,11 +106,11 @@ const TournamentsPage = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric'
+      });
   };
 
   const formatCurrency = (amount: number) => {
@@ -149,10 +149,10 @@ const TournamentsPage = () => {
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
               Pickleball Tournaments
-            </h1>
+          </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto drop-shadow-md">
               Compete, improve, and connect with players from all skill levels
-            </p>
+          </p>
           </div>
         </div>
       </section>
@@ -163,54 +163,54 @@ const TournamentsPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <input
-                placeholder="Search tournaments..."
-                value={filters.search}
+              placeholder="Search tournaments..."
+              value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
-              <select 
-                value={filters.tournament_type} 
-                onChange={(e) => handleFilterChange('tournament_type', e.target.value)}
+            <select 
+              value={filters.tournament_type} 
+              onChange={(e) => handleFilterChange('tournament_type', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Types</option>
-                <option value="local">Local</option>
-                <option value="state">State</option>
-                <option value="national">National</option>
-                <option value="international">International</option>
-                <option value="exhibition">Exhibition</option>
-                <option value="league">League</option>
-              </select>
+            >
+              <option value="all">All Types</option>
+              <option value="local">Local</option>
+              <option value="state">State</option>
+              <option value="national">National</option>
+              <option value="international">International</option>
+              <option value="exhibition">Exhibition</option>
+              <option value="league">League</option>
+            </select>
             </div>
             <div>
-              <select 
-                value={filters.category} 
-                onChange={(e) => handleFilterChange('category', e.target.value)}
+            <select 
+              value={filters.category} 
+              onChange={(e) => handleFilterChange('category', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Categories</option>
-                <option value="singles">Singles</option>
-                <option value="doubles">Doubles</option>
-                <option value="mixed_doubles">Mixed Doubles</option>
-                <option value="team">Team</option>
-              </select>
+            >
+              <option value="all">All Categories</option>
+              <option value="singles">Singles</option>
+              <option value="doubles">Doubles</option>
+              <option value="mixed_doubles">Mixed Doubles</option>
+              <option value="team">Team</option>
+            </select>
             </div>
             <div>
-              <select 
-                value={filters.status} 
-                onChange={(e) => handleFilterChange('status', e.target.value)}
+            <select 
+              value={filters.status} 
+              onChange={(e) => handleFilterChange('status', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="all">All Statuses</option>
-                <option value="registration_open">Registration Open</option>
-                <option value="registration_closed">Registration Closed</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
+            >
+              <option value="all">All Statuses</option>
+              <option value="registration_open">Registration Open</option>
+              <option value="registration_closed">Registration Closed</option>
+              <option value="in_progress">In Progress</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
           </div>
         </div>
       </section>
@@ -229,17 +229,17 @@ const TournamentsPage = () => {
               <div className="max-w-md mx-auto">
                 <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+                  </svg>
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No tournaments found</h3>
                 <p className="text-gray-600 mb-6">
                   Try adjusting your search criteria or check back later for new tournaments.
                 </p>
-                <button 
+                  <button 
                   onClick={() => setFilters({ page: 1, limit: 12, tournament_type: 'all', category: 'all', status: 'all', state: '', city: '', search: '' })}
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
                   Clear Filters
-                </button>
+                  </button>
               </div>
             </div>
           ) : (
@@ -260,15 +260,15 @@ const TournamentsPage = () => {
                           <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                             <svg className="w-16 h-16 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                          </div>
+                        </svg>
+                    </div>
                         )}
                         
                         {/* Status Badge */}
                         <div className="absolute top-3 right-3">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(tournament.status)}`}>
-                            {tournament.status.replace('_', ' ')}
-                          </span>
+                        {tournament.status.replace('_', ' ')}
+                      </span>
                         </div>
 
                         {/* Type Badge */}
@@ -291,7 +291,7 @@ const TournamentsPage = () => {
                           <p className="text-sm text-gray-500">
                             {formatDate(tournament.start_date)} - {formatDate(tournament.end_date)}
                           </p>
-                        </div>
+                  </div>
 
                         {tournament.description && (
                           <p className="text-gray-700 line-clamp-3 mb-4">
@@ -303,17 +303,17 @@ const TournamentsPage = () => {
                           <div className="flex items-center text-gray-600">
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                            </svg>
+                        </svg>
                             {tournament.current_participants || 0}/{tournament.max_participants || '∞'} participants
-                          </div>
+                      </div>
                           <div className="flex items-center text-gray-600">
                             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
                             {tournament.entry_fee ? formatCurrency(tournament.entry_fee) : 'Free'}
                           </div>
-                        </div>
+                    </div>
 
                         <div className="flex flex-wrap gap-2 mb-4">
                           {tournament.skill_levels && tournament.skill_levels.map((level, index) => (
@@ -321,19 +321,19 @@ const TournamentsPage = () => {
                               {level}
                             </span>
                           ))}
-                        </div>
-
+                    </div>
+                    
                         <div className="flex items-center justify-between pt-4 border-t">
                           <div className="text-sm text-gray-500">
                             Registration deadline: {tournament.registration_deadline ? formatDate(tournament.registration_deadline) : 'TBD'}
-                          </div>
-                          <button 
-                            onClick={() => handleRegister(tournament.id)}
+                    </div>
+                        <button 
+                          onClick={() => handleRegister(tournament.id)}
                             disabled={tournament.status !== 'registration_open'}
                             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
                             {tournament.status === 'registration_open' ? 'Register' : 'Registration Closed'}
-                          </button>
+                      </button>
                         </div>
                       </div>
                     </div>
@@ -341,17 +341,17 @@ const TournamentsPage = () => {
                 ))}
               </div>
 
-              {/* Pagination */}
+        {/* Pagination */}
               {pagination && pagination.pages > 1 && (
                 <div className="flex justify-center mt-12">
                   <div className="flex items-center space-x-2">
-                    <button
+            <button
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={pagination.page <= 1}
                       className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
+            >
+              Previous
+            </button>
                     
                     {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                       const page = i + 1;
@@ -370,14 +370,14 @@ const TournamentsPage = () => {
                       );
                     })}
                     
-                    <button
+            <button
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page >= pagination.pages}
                       className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </div>
+            >
+              Next
+            </button>
+          </div>
                 </div>
               )}
             </>

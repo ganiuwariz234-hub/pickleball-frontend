@@ -450,12 +450,30 @@ export interface UsersQueryParams {
 }
 
 export interface UpdateUserRequest {
-  first_name?: string;
-  last_name?: string;
+  full_name?: string;
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  phone?: string;
+  profile_photo?: string;
+  bio?: string;
+  skill_level?: '2.5' | '3.0' | '3.5' | '4.0' | '4.5' | '5.0' | '5.5';
   state?: string;
   city?: string;
-  phone?: string;
-  skill_level?: '2.5' | '3.0' | '3.5' | '4.0' | '4.5' | '5.0' | '5.5';
+  address?: string;
+  latitude?: number;
+  longitude?: number;
+  timezone?: string;
+  business_name?: string;
+  contact_person?: string;
+  job_title?: string;
+  curp?: string;
+  rfc?: string;
+  website?: string;
+  membership_status?: 'free' | 'basic' | 'premium' | 'expired';
+  membership_expires_at?: string;
+  is_active?: boolean;
+  is_verified?: boolean;
+  club_id?: string;
 }
 
 export interface UsersResponse extends PaginatedResponse<User> {}

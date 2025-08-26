@@ -29,9 +29,15 @@ const ProfilePage = () => {
   // Update edit form when user data changes
   React.useEffect(() => {
     if (user) {
+      // Split full_name into first_name and last_name for the form
+      const fullName = user.full_name || '';
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       setEditForm({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
+        first_name: firstName,
+        last_name: lastName,
         state: user.state || '',
         city: user.city || '',
         phone: user.phone || '',
@@ -45,9 +51,14 @@ const ProfilePage = () => {
   const handleEditToggle = () => {
     if (isEditing) {
       // Reset to current user data when canceling
+      const fullName = user?.full_name || '';
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
       setEditForm({
-        first_name: user?.first_name || '',
-        last_name: user?.last_name || '',
+        first_name: firstName,
+        last_name: lastName,
         state: user?.state || '',
         city: user?.city || '',
         phone: user?.phone || '',
@@ -61,10 +72,15 @@ const ProfilePage = () => {
     if (!user?.id) return;
 
     try {
+      // Transform form data to match backend API expectations
       const userData = {
-        ...editForm,
+        full_name: `${editForm.first_name} ${editForm.last_name}`.trim(),
+        state: editForm.state || undefined,
+        city: editForm.city || undefined,
+        phone: editForm.phone || undefined,
         skill_level: editForm.skill_level || undefined
       };
+
       await dispatch(updateUser({ id: user.id, userData }));
       toast.success('Profile updated successfully!');
       setIsEditing(false);
@@ -109,9 +125,10 @@ const ProfilePage = () => {
     });
   };
 
-  const getInitials = (firstName?: string, lastName?: string) => {
-    const first = firstName?.charAt(0) || '';
-    const last = lastName?.charAt(0) || '';
+  const getInitials = (fullName: string) => {
+    const nameParts = fullName.split(' ');
+    const first = nameParts[0]?.charAt(0) || '';
+    const last = nameParts.slice(1).join(' ')?.charAt(0) || '';
     return (first + last).toUpperCase();
   };
 
@@ -156,7 +173,7 @@ const ProfilePage = () => {
                       <img src={user.profile_photo} alt={user.full_name || user.username} className="w-full h-full object-cover" />
                     ) : (
                       <span className="text-2xl font-bold text-gray-600">
-                        {getInitials(user.first_name, user.last_name)}
+                        {getInitials(user.full_name)}
                       </span>
                     )}
                   </div>
@@ -291,23 +308,23 @@ const ProfilePage = () => {
                       <div className="space-y-2">
                         <label htmlFor="first_name" className="animate-on-scroll block text-sm font-medium text-gray-700">First Name</label>
                         <input
-                          id="first_name"
                           type="text"
-                          value={isEditing ? editForm.first_name : user.first_name || ''}
+                          id="first_name"
+                          value={isEditing ? editForm.first_name : (user.full_name?.split(' ')[0] || '')}
                           onChange={(e) => handleInputChange('first_name', e.target.value)}
-                          disabled={!isEditing}
                           className="animate-on-scroll w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                          disabled={!isEditing}
                         />
                       </div>
                       <div className="space-y-2">
                         <label htmlFor="last_name" className="animate-on-scroll block text-sm font-medium text-gray-700">Last Name</label>
                         <input
-                          id="last_name"
                           type="text"
-                          value={isEditing ? editForm.last_name : user.last_name || ''}
+                          id="last_name"
+                          value={isEditing ? editForm.last_name : (user.full_name?.split(' ').slice(1).join(' ') || '')}
                           onChange={(e) => handleInputChange('last_name', e.target.value)}
-                          disabled={!isEditing}
                           className="animate-on-scroll w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100"
+                          disabled={!isEditing}
                         />
                       </div>
                     </div>
