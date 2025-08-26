@@ -23,6 +23,7 @@ import clubDashboardReducer from './slices/clubDashboardSlice'
 import partnerDashboardReducer from './slices/partnerDashboardSlice'
 import stateDashboardReducer from './slices/stateDashboardSlice'
 import adminDashboardReducer from './slices/adminDashboardSlice'
+import statesReducer from './slices/statesSlice'
 
 export const store = configureStore({
   reducer: {
@@ -50,6 +51,7 @@ export const store = configureStore({
     partnerDashboard: partnerDashboardReducer,
     stateDashboard: stateDashboardReducer,
     adminDashboard: adminDashboardReducer,
+    states: statesReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

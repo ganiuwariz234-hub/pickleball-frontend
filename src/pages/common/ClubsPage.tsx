@@ -4,10 +4,31 @@ import { AppDispatch, RootState } from '../../store';
 import { fetchClubs } from '../../store/slices/clubsSlice';
 import { Club } from '../../types/api';
 
+// Import states slice actions directly
+import { fetchStates } from '../../store/slices/statesSlice';
+
 const ClubsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { clubs, loading, error, pagination } = useSelector((state: RootState) => state.clubs);
+  const { states, loading: statesLoading, error: statesError } = useSelector((state: RootState) => state.states);
   
+  // Fallback states in case API fails
+  const fallbackStates = [
+    { id: '1', state: 'Jalisco', city: 'Guadalajara' },
+    { id: '2', state: 'Nuevo León', city: 'Monterrey' },
+    { id: '3', state: 'Baja California', city: 'Tijuana' },
+    { id: '4', state: 'Sonora', city: 'Hermosillo' },
+    { id: '5', state: 'Chihuahua', city: 'Chihuahua' },
+    { id: '6', state: 'Coahuila', city: 'Saltillo' },
+    { id: '7', state: 'Tamaulipas', city: 'Reynosa' },
+    { id: '8', state: 'Sinaloa', city: 'Culiacán' },
+    { id: '9', state: 'Durango', city: 'Durango' },
+    { id: '10', state: 'Zacatecas', city: 'Zacatecas' }
+  ];
+  
+  // Use fallback states if API fails or returns empty
+  const availableStates = states.length > 0 ? states : fallbackStates;
+
   const [filters, setFilters] = useState<{
     page: number;
     limit: number;
@@ -29,6 +50,11 @@ const ClubsPage = () => {
   });
 
   useEffect(() => {
+    // Fetch states for the filter dropdown
+    dispatch(fetchStates({}));
+  }, [dispatch]);
+
+  useEffect(() => {
     const apiFilters = {
       ...filters,
       state: filters.state === 'all' ? undefined : filters.state,
@@ -37,6 +63,14 @@ const ClubsPage = () => {
       has_courts: filters.has_courts === 'all' ? undefined : (filters.has_courts === 'true'),
       subscription_plan: filters.subscription_plan === 'all' ? undefined : filters.subscription_plan
     } as any;
+    
+    // Remove undefined values
+    Object.keys(apiFilters).forEach(key => {
+      if (apiFilters[key] === undefined) {
+        delete apiFilters[key];
+      }
+    });
+    
     dispatch(fetchClubs(apiFilters));
   }, [dispatch, filters]);
 
@@ -117,17 +151,45 @@ const ClubsPage = () => {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
               <select 
                 value={filters.state} 
                 onChange={(e) => handleFilterChange('state', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent animate-on-scroll"
+                disabled={statesLoading}
               >
                 <option value="all">All States</option>
-                <option value="Jalisco">Jalisco</option>
-                <option value="Nuevo León">Nuevo León</option>
-                <option value="CDMX">CDMX</option>
-                <option value="Baja California">Baja California</option>
+                {statesLoading ? (
+                  <option value="" disabled>Loading states...</option>
+                ) : statesError ? (
+                  <option value="" disabled>Error loading states</option>
+                ) : availableStates.length > 0 ? (
+                  availableStates.map((state) => (
+                    <option key={state.id} value={state.state}>
+                      {state.state}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No states available</option>
+                )}
               </select>
+              {statesLoading && (
+                <div className="mt-1 text-xs text-gray-500">Loading states...</div>
+              )}
+              {statesError && states.length === 0 && (
+                <div className="mt-1 text-xs text-amber-500">Using fallback state list</div>
+              )}
+              {statesError && (
+                <div className="mt-1 text-xs text-red-500">
+                  Failed to load states (using fallback list)
+                  <button 
+                    onClick={() => dispatch(fetchStates({}))}
+                    className="ml-2 text-blue-500 hover:text-blue-700 underline"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
             </div>
             <div>
               <select 

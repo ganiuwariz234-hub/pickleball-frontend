@@ -1,17 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../store';
-
-import { Ranking } from '../../types/api';
+import { fetchPlayerRankings } from '../../store/slices/rankingsSlice';
 
 const RankingsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { rankingIssues, loading, error, pagination } = useSelector((state: RootState) => state.rankings);
+  const { playerRankings, loading, error, pagination } = useSelector((state: RootState) => state.rankings);
   
   const [filters, setFilters] = useState<{
     page: number;
     limit: number;
-    category: '' | 'singles' | 'doubles' | 'mixed_doubles';
+    category: 'singles' | 'doubles' | 'mixed_doubles';
     skill_level: '' | '2.5' | '3.0' | '3.5' | '4.0' | '4.5' | '5.0' | '5.5';
     state: string;
     search: string;
@@ -24,7 +23,23 @@ const RankingsPage = () => {
     search: ''
   });
 
+  useEffect(() => {
+    const apiFilters = {
+      ...filters,
+      skill_level: filters.skill_level || undefined,
+      state: filters.state || undefined,
+      search: filters.search || undefined
+    };
 
+    // Remove undefined values
+    Object.keys(apiFilters).forEach(key => {
+      if (apiFilters[key as keyof typeof apiFilters] === undefined) {
+        delete apiFilters[key as keyof typeof apiFilters];
+      }
+    });
+
+    dispatch(fetchPlayerRankings(apiFilters));
+  }, [dispatch, filters]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
@@ -95,7 +110,7 @@ const RankingsPage = () => {
     return `${percentage.toFixed(1)}%`;
   };
 
-      if (loading && rankingIssues.length === 0) {
+  if (loading && playerRankings.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-center h-64">
@@ -114,10 +129,10 @@ const RankingsPage = () => {
       <section className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-16">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 animate-on-scroll">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Player Rankings
             </h1>
-            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto animate-on-scroll">
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
               Discover the top pickleball players and track your ranking progress
             </p>
           </div>
@@ -131,8 +146,8 @@ const RankingsPage = () => {
             <div>
               <select 
                 value={filters.category} 
-                onChange={(e) => handleFilterChange('category', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent animate-on-scroll"
+                onChange={(e) => handleFilterChange('category', e.target.value as 'singles' | 'doubles' | 'mixed_doubles')}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="singles">Singles</option>
                 <option value="doubles">Doubles</option>
@@ -143,7 +158,7 @@ const RankingsPage = () => {
               <select 
                 value={filters.skill_level} 
                 onChange={(e) => handleFilterChange('skill_level', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent animate-on-scroll"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="">All Levels</option>
                 <option value="2.5">2.5</option>
@@ -161,7 +176,7 @@ const RankingsPage = () => {
                 placeholder="Search players..."
                 value={filters.search}
                 onChange={(e) => handleFilterChange('search', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 animate-on-scroll"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div>
@@ -170,14 +185,12 @@ const RankingsPage = () => {
                 placeholder="State"
                 value={filters.state}
                 onChange={(e) => handleFilterChange('state', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 animate-on-scroll"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           </div>
         </div>
       </section>
-
-
 
       {/* Rankings Table Section */}
       <section className="py-12">
@@ -188,19 +201,19 @@ const RankingsPage = () => {
             </div>
           )}
 
-                          {rankingIssues.length === 0 && !loading ? (
+          {playerRankings.length === 0 && !loading ? (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4 animate-on-scroll" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2 animate-on-scroll">No rankings found</h3>
-                <p className="text-gray-600 mb-6 animate-on-scroll">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">No rankings found</h3>
+                <p className="text-gray-600 mb-6">
                   Try adjusting your search criteria or check back later for new rankings.
                 </p>
                 <button 
                   onClick={() => setFilters({ page: 1, limit: 20, category: 'singles', skill_level: '', state: '', search: '' })}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors animate-on-scroll"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
                   Clear Filters
                 </button>
@@ -208,7 +221,7 @@ const RankingsPage = () => {
             </div>
           ) : (
             <>
-              <div className="bg-white rounded-lg shadow overflow-hidden animate-on-scroll">
+              <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-gray-50">
@@ -223,58 +236,50 @@ const RankingsPage = () => {
                           Skill Level
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Requested Rank
+                          Points
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
+                          State
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Submitted
+                          Last Updated
                         </th>
-
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {rankingIssues.map((ranking, index) => (
+                      {playerRankings.map((ranking, index) => (
                         <tr key={ranking.id} className="hover:bg-gray-50 transition-colors duration-200">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <span className="text-lg font-bold text-blue-600">#{ranking.current_rank}</span>
+                              {getPositionIcon(ranking.position)}
+                              <span className="ml-2 text-lg font-bold text-blue-600">#{ranking.position}</span>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div>
                                 <div className="text-sm font-medium text-gray-900">
-                                  {ranking.player_name}
+                                  {ranking.user?.full_name || ranking.user?.username || 'Unknown Player'}
                                 </div>
                                 <div className="text-sm text-gray-500">
-                                  {ranking.reason || 'No reason provided'}
+                                  {ranking.user?.username}
                                 </div>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                              N/A
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getSkillLevelColor(ranking.user?.skill_level || '')}`}>
+                              {ranking.user?.skill_level || 'N/A'}
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {ranking.requested_rank} requested
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                ranking.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                ranking.status === 'approved' ? 'bg-green-100 text-green-800' :
-                                'bg-red-100 text-red-800'
-                              }`}>
-                                {ranking.status}
-                              </span>
-                            </div>
+                            {ranking.points || 0} pts
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {ranking.submitted_at}
+                            {ranking.user?.state || 'N/A'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {ranking.updated_at ? new Date(ranking.updated_at).toLocaleDateString() : 'N/A'}
                           </td>
                         </tr>
                       ))}
@@ -290,7 +295,7 @@ const RankingsPage = () => {
                     <button
                       onClick={() => handlePageChange(pagination.page - 1)}
                       disabled={pagination.page <= 1}
-                      className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform duration-300 animate-on-scroll"
+                      className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Previous
                     </button>
@@ -301,7 +306,7 @@ const RankingsPage = () => {
                         <button
                           key={page}
                           onClick={() => handlePageChange(page)}
-                          className={`px-3 py-2 text-sm font-medium rounded-md hover:scale-105 transition-transform duration-300 animate-on-scroll ${
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
                             pagination.page === page 
                               ? 'bg-blue-600 text-white' 
                               : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
@@ -315,7 +320,7 @@ const RankingsPage = () => {
                     <button
                       onClick={() => handlePageChange(pagination.page + 1)}
                       disabled={pagination.page >= pagination.pages}
-                      className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-105 transition-transform duration-300 animate-on-scroll"
+                      className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Next
                     </button>

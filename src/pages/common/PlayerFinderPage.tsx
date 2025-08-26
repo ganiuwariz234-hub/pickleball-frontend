@@ -1,212 +1,193 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../store';
+import { AppDispatch, RootState } from '../../store';
+import { 
+  searchPlayers, 
+  fetchNearbyPlayers, 
+  fetchPlayerFinderPreferences, 
+  updatePlayerFinderPreferences,
+  togglePlayerFinderStatus,
+  sendMatchRequest,
+  clearSearchResults
+} from '../../store/slices/playerFinderSlice';
 import { toast } from 'sonner';
 
-interface Player {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  skillLevel: string;
-  location: string;
-  availability: string[];
-  photo?: string;
-  isVisible: boolean;
-  lastActive: string;
-  bio?: string;
-  preferredCourts?: string[];
-  tournamentHistory?: string[];
-  rating?: number;
-  notifications?: Array<{
-    id: string;
-    from: string;
-    message: string;
-    timestamp: string;
-    read: boolean;
-  }>;
-}
-
 interface SearchFilters {
-  skillLevel: string;
-  location: string;
-  availability: string[];
-  maxDistance: number;
-  hasPhoto: boolean;
-  isActive: boolean;
+  skill_level?: '2.5' | '3.0' | '3.5' | '4.0' | '4.5' | '5.0' | '5.5';
+  gender?: 'male' | 'female' | 'any';
+  age_min?: number;
+  age_max?: number;
+  match_type?: 'singles' | 'doubles' | 'mixed_doubles' | 'any';
+  radius?: number;
+  page?: number;
+  limit?: number;
 }
 
 const PlayerFinderPage: React.FC = () => {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { user } = useSelector((state: RootState) => state.auth);
+  const { 
+    searchResults, 
+    nearbyPlayers, 
+    preferences, 
+    stats, 
+    loading, 
+    error, 
+    pagination 
+  } = useSelector((state: RootState) => state.playerFinder);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<SearchFilters>({
-    skillLevel: '',
-    location: '',
-    availability: [],
-    maxDistance: 50,
-    hasPhoto: false,
-    isActive: false
+    skill_level: undefined,
+    gender: undefined,
+    age_min: undefined,
+    age_max: undefined,
+    match_type: undefined,
+    radius: 50,
+    page: 1,
+    limit: 20
   });
   
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactMessage, setContactMessage] = useState('');
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const [privacySettings, setPrivacySettings] = useState({
-    isVisible: true,
-    showEmail: true,
-    showPhone: true,
-    showLocation: true,
-    allowContact: true
+    is_active: true,
+    skill_level_min: undefined as '2.5' | '3.0' | '3.5' | '4.0' | '4.5' | '5.0' | '5.5' | undefined,
+    skill_level_max: undefined as '2.5' | '3.0' | '3.5' | '4.0' | '4.5' | '5.0' | '5.5' | undefined,
+    preferred_gender: 'any' as 'male' | 'female' | 'any',
+    age_range_min: undefined as number | undefined,
+    age_range_max: undefined as number | undefined,
+    search_radius_km: 50,
+    match_type: 'any' as 'singles' | 'doubles' | 'mixed_doubles' | 'any',
+    contact_method: 'any' as 'email' | 'phone' | 'whatsapp' | 'any',
+    auto_notify: true
   });
 
-  // Mock data - in real app this would come from API
-  const [players, setPlayers] = useState<Player[]>([
-    {
-      id: '1',
-      name: 'Sarah M.',
-      email: 'sarah.m@email.com',
-      phone: '+52-33-1234-5678',
-      skillLevel: '4.0',
-      location: 'Guadalajara, Jalisco',
-      availability: ['Weekdays', 'Weekends'],
-      isVisible: true,
-      lastActive: '2024-03-25',
-      bio: 'Advanced player looking for competitive matches and tournament partners.',
-      preferredCourts: ['Elite Pickleball Club', 'Sports Center'],
-      tournamentHistory: ['Spring Championship 2024', 'Summer League 2023'],
-      rating: 4.8
-    },
-    {
-      id: '2',
-      name: 'Mike R.',
-      email: 'mike.r@email.com',
-      phone: '+52-33-1234-5680',
-      skillLevel: '3.0',
-      location: 'Zapopan, Jalisco',
-      availability: ['Weekends'],
-      isVisible: true,
-      lastActive: '2024-03-24',
-      bio: 'Intermediate player learning the game, open to friendly matches.',
-      preferredCourts: ['Community Center'],
-      tournamentHistory: [],
-      rating: 3.2
-    },
-    {
-      id: '3',
-      name: 'Lisa K.',
-      email: 'lisa.k@email.com',
-      phone: '+52-33-1234-5682',
-      skillLevel: '4.5',
-      location: 'Tlaquepaque, Jalisco',
-      availability: ['Weekdays'],
-      isVisible: false,
-      lastActive: '2024-03-25',
-      bio: 'Advanced player and former club champion. Available for coaching.',
-      preferredCourts: ['Elite Pickleball Club'],
-      tournamentHistory: ['Club Champion 2023', 'State Finals 2023'],
-      rating: 4.9
+  useEffect(() => {
+    // Fetch user's player finder preferences
+    if (user) {
+      dispatch(fetchPlayerFinderPreferences());
     }
-  ]);
-
-  const [filteredPlayers, setFilteredPlayers] = useState<Player[]>([]);
+    
+    // Fetch nearby players on component mount
+    dispatch(fetchNearbyPlayers(10));
+  }, [dispatch, user]);
 
   useEffect(() => {
-    filterPlayers();
-  }, [searchQuery, filters, players]);
+    // Update privacy settings when preferences are loaded
+    if (preferences) {
+      setPrivacySettings({
+        is_active: preferences.is_active || false,
+        skill_level_min: preferences.skill_level_min,
+        skill_level_max: preferences.skill_level_max,
+        preferred_gender: preferences.preferred_gender || 'any',
+        age_range_min: preferences.age_range_min,
+        age_range_max: preferences.age_range_max,
+        search_radius_km: preferences.search_radius_km || 50,
+        match_type: preferences.match_type || 'any',
+        contact_method: preferences.contact_method || 'any',
+        auto_notify: preferences.auto_notify || true
+      });
+    }
+  }, [preferences]);
 
-  const filterPlayers = () => {
-    let filtered = players.filter(player => player.isVisible);
-
-    if (searchQuery) {
-      filtered = filtered.filter(player =>
-        player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        player.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        player.bio?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  const handleSearch = () => {
+    if (!user?.latitude || !user?.longitude) {
+      toast.error('Location information required. Please update your profile with location details.');
+      return;
     }
 
-    if (filters.skillLevel) {
-      filtered = filtered.filter(player => player.skillLevel === filters.skillLevel);
-    }
+    const searchParams = {
+      ...filters,
+      latitude: user.latitude,
+      longitude: user.longitude,
+      page: 1
+    };
 
-    if (filters.location) {
-      filtered = filtered.filter(player => 
-        player.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
-    }
+    // Remove undefined values
+    Object.keys(searchParams).forEach(key => {
+      const value = searchParams[key as keyof SearchFilters];
+      if (value === undefined || value === null) {
+        delete searchParams[key as keyof SearchFilters];
+      }
+    });
 
-    if (filters.availability.length > 0) {
-      filtered = filtered.filter(player =>
-        filters.availability.some(avail => player.availability.includes(avail))
-      );
-    }
-
-    if (filters.hasPhoto) {
-      filtered = filtered.filter(player => player.photo);
-    }
-
-    if (filters.isActive) {
-      const lastWeek = new Date();
-      lastWeek.setDate(lastWeek.getDate() - 7);
-      filtered = filtered.filter(player => new Date(player.lastActive) >= lastWeek);
-    }
-
-    setFilteredPlayers(filtered);
+    dispatch(searchPlayers(searchParams));
   };
 
-  const handleContactPlayer = (player: Player) => {
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handlePageChange = (page: number) => {
+    setFilters(prev => ({ ...prev, page }));
+    handleSearch();
+  };
+
+  const handleContactPlayer = (player: any) => {
     setSelectedPlayer(player);
     setShowContactModal(true);
   };
 
-  const sendContactMessage = () => {
+  const sendContactMessage = async () => {
     if (!contactMessage.trim()) {
       toast.error('Please enter a message');
       return;
     }
 
-    // In a real app, this would send a notification to the player
-    toast.success(`Message sent to ${selectedPlayer?.name}! They will be notified.`);
-    
-    // Add notification to the player (in real app this would be via API)
-    const updatedPlayers = players.map(p => {
-      if (p.id === selectedPlayer?.id) {
-        return {
-          ...p,
-          notifications: [...(p.notifications || []), {
-            id: Date.now().toString(),
-            from: user?.name || 'Anonymous',
-            message: contactMessage,
-            timestamp: new Date().toISOString(),
-            read: false
-          }]
-        };
-      }
-      return p;
-    });
-    
-    setPlayers(updatedPlayers);
-    setShowContactModal(false);
-    setContactMessage('');
-    setSelectedPlayer(null);
+    if (!selectedPlayer) return;
+
+    try {
+      const matchType = filters.match_type && filters.match_type !== 'any' ? filters.match_type : 'singles';
+      await dispatch(sendMatchRequest({
+        targetUserId: selectedPlayer.id,
+        requestData: {
+          message: contactMessage,
+          match_type: matchType,
+          preferred_date: new Date().toISOString()
+        }
+      })).unwrap();
+
+      toast.success(`Message sent to ${selectedPlayer.full_name || selectedPlayer.username}! They will be notified.`);
+      setShowContactModal(false);
+      setContactMessage('');
+      setSelectedPlayer(null);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send message');
+    }
   };
 
-  const updatePrivacySettings = () => {
-    // In a real app, this would update the user's privacy settings via API
-    const updatedPlayers = players.map(p => {
-      if (p.id === user?.id) {
-        return { ...p, ...privacySettings };
-      }
-      return p;
-    });
-    
-    setPlayers(updatedPlayers);
-    setShowPrivacySettings(false);
-    toast.success('Privacy settings updated successfully!');
+  const updatePrivacySettings = async () => {
+    try {
+      await dispatch(updatePlayerFinderPreferences({
+        skill_level_min: privacySettings.skill_level_min,
+        skill_level_max: privacySettings.skill_level_max,
+        preferred_gender: privacySettings.preferred_gender,
+        age_range_min: privacySettings.age_range_min,
+        age_range_max: privacySettings.age_range_max,
+        search_radius_km: privacySettings.search_radius_km,
+        match_type: privacySettings.match_type,
+        contact_method: privacySettings.contact_method,
+        auto_notify: privacySettings.auto_notify
+      })).unwrap();
+
+      setShowPrivacySettings(false);
+      toast.success('Privacy settings updated successfully!');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update privacy settings');
+    }
+  };
+
+  const toggleVisibility = async () => {
+    try {
+      await dispatch(togglePlayerFinderStatus()).unwrap();
+      toast.success(preferences?.is_active ? 'You are now hidden from player finder' : 'You are now visible in player finder');
+    } catch (error: any) {
+      toast.error('Failed to update visibility');
+    }
   };
 
   const getSkillLevelColor = (level: string) => {
@@ -218,13 +199,26 @@ const PlayerFinderPage: React.FC = () => {
     return 'bg-gray-100 text-gray-800';
   };
 
-  const getAvailabilityBadges = (availability: string[]) => {
-    return availability.map(avail => (
-      <span key={avail} className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-1">
-        {avail}
-      </span>
-    ));
+  const calculateAge = (dateOfBirth: string) => {
+    if (!dateOfBirth) return null;
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
   };
+
+  const formatLocation = (player: any) => {
+    if (player.city && player.state) {
+      return `${player.city}, ${player.state}`;
+    }
+    return player.state || 'Location not specified';
+  };
+
+  const displayPlayers = searchResults.length > 0 ? searchResults : nearbyPlayers;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -236,15 +230,31 @@ const PlayerFinderPage: React.FC = () => {
               <h1 className="text-3xl font-bold text-gray-900">Find Players</h1>
               <p className="text-gray-600">Connect with pickleball players in your area</p>
             </div>
-            <button
-              onClick={() => setShowPrivacySettings(true)}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
-              <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              </svg>
-              Privacy Settings
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={toggleVisibility}
+                className={`inline-flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium ${
+                  preferences?.is_active 
+                    ? 'border-green-300 text-green-700 bg-green-50 hover:bg-green-100' 
+                    : 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                {preferences?.is_active ? 'Visible' : 'Hidden'}
+              </button>
+              <button
+                onClick={() => setShowPrivacySettings(true)}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                </svg>
+                Privacy Settings
+              </button>
+            </div>
           </div>
         </div>
 
@@ -270,7 +280,7 @@ const PlayerFinderPage: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-end">
+            <div className="flex items-end space-x-3">
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
@@ -279,6 +289,13 @@ const PlayerFinderPage: React.FC = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.207A1 1 0 013 6.5V4z" />
                 </svg>
                 Filters
+              </button>
+              <button
+                onClick={handleSearch}
+                disabled={loading || !user?.latitude || !user?.longitude}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Searching...' : 'Search'}
               </button>
             </div>
           </div>
@@ -290,8 +307,8 @@ const PlayerFinderPage: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Skill Level</label>
                   <select
-                    value={filters.skillLevel}
-                    onChange={(e) => setFilters({...filters, skillLevel: e.target.value})}
+                    value={filters.skill_level || ''}
+                    onChange={(e) => handleFilterChange('skill_level', e.target.value || undefined)}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">All Levels</option>
@@ -305,14 +322,17 @@ const PlayerFinderPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                  <input
-                    type="text"
-                    value={filters.location}
-                    onChange={(e) => setFilters({...filters, location: e.target.value})}
-                    placeholder="City, State, or Area"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                  <select
+                    value={filters.gender || ''}
+                    onChange={(e) => handleFilterChange('gender', e.target.value || undefined)}
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
+                  >
+                    <option value="">Any Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="any">Any</option>
+                  </select>
                 </div>
 
                 <div>
@@ -321,162 +341,207 @@ const PlayerFinderPage: React.FC = () => {
                     type="range"
                     min="5"
                     max="100"
-                    value={filters.maxDistance}
-                    onChange={(e) => setFilters({...filters, maxDistance: parseInt(e.target.value)})}
+                    value={filters.radius || 50}
+                    onChange={(e) => handleFilterChange('radius', parseInt(e.target.value))}
                     className="block w-full"
                   />
-                  <span className="text-sm text-gray-600">{filters.maxDistance} km</span>
+                  <span className="text-sm text-gray-600">{filters.radius} km</span>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
-                  <div className="space-y-2">
-                    {['Weekdays', 'Weekends', 'Mornings', 'Afternoons', 'Evenings'].map(avail => (
-                      <label key={avail} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={filters.availability.includes(avail)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFilters({...filters, availability: [...filters.availability, avail]});
-                            } else {
-                              setFilters({...filters, availability: filters.availability.filter(a => a !== avail)});
-                            }
-                          }}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{avail}</span>
-                      </label>
-                    ))}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Age Range</label>
+                  <div className="flex space-x-2">
+                    <input
+                      type="number"
+                      placeholder="Min"
+                      value={filters.age_min || ''}
+                      onChange={(e) => handleFilterChange('age_min', e.target.value ? parseInt(e.target.value) : undefined)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Max"
+                      value={filters.age_max || ''}
+                      onChange={(e) => handleFilterChange('age_max', e.target.value ? parseInt(e.target.value) : undefined)}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Additional Filters</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.hasPhoto}
-                        onChange={(e) => setFilters({...filters, hasPhoto: e.target.checked})}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Has Profile Photo</span>
-                    </label>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.isActive}
-                        onChange={(e) => setFilters({...filters, isActive: e.target.checked})}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Recently Active</span>
-                    </label>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Match Type</label>
+                  <select
+                    value={filters.match_type || ''}
+                    onChange={(e) => handleFilterChange('match_type', e.target.value || undefined)}
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Any Type</option>
+                    <option value="singles">Singles</option>
+                    <option value="doubles">Doubles</option>
+                    <option value="mixed_doubles">Mixed Doubles</option>
+                    <option value="any">Any</option>
+                  </select>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Results Count */}
-        <div className="mb-4">
+        {/* Results Count and Stats */}
+        <div className="mb-4 flex justify-between items-center">
           <p className="text-sm text-gray-600">
-            Found {filteredPlayers.length} player{filteredPlayers.length !== 1 ? 's' : ''} matching your criteria
+            {searchResults.length > 0 
+              ? `Found ${searchResults.length} player${searchResults.length !== 1 ? 's' : ''} matching your criteria`
+              : `Showing ${nearbyPlayers.length} nearby players`
+            }
           </p>
+          {stats && (
+            <div className="text-sm text-gray-600">
+              <span className="mr-4">Matches found: {stats.total_matches_found}</span>
+              <span className="mr-4">Contacted: {stats.matches_contacted}</span>
+              <span>Successful: {stats.successful_matches}</span>
+            </div>
+          )}
         </div>
 
         {/* Players Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPlayers.map((player) => (
-            <div key={player.id} className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="flex-shrink-0 h-16 w-16">
-                    {player.photo ? (
-                      <img className="h-16 w-16 rounded-full object-cover" src={player.photo} alt={player.name} />
-                    ) : (
-                      <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-medium">
-                        {player.name.split(' ').map(n => n[0]).join('')}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900 truncate">{player.name}</h3>
-                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSkillLevelColor(player.skillLevel)}`}>
-                      {player.skillLevel}
-                    </span>
-                    {player.rating && (
-                      <div className="flex items-center mt-1">
-                        <div className="flex items-center">
-                          {[...Array(5)].map((_, i) => (
-                            <svg key={i} className={`h-4 w-4 ${i < Math.floor(player.rating!) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                          ))}
+        {loading && displayPlayers.length === 0 ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Searching for players...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {displayPlayers.map((player) => (
+              <div key={player.id} className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+                <div className="p-6">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="flex-shrink-0 h-16 w-16">
+                      {player.profile_photo ? (
+                        <img className="h-16 w-16 rounded-full object-cover" src={player.profile_photo} alt={player.full_name || player.username} />
+                      ) : (
+                        <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-medium">
+                          {(player.full_name || player.username).split(' ').map((n: string) => n[0]).join('')}
                         </div>
-                        <span className="ml-1 text-sm text-gray-600">({player.rating})</span>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg font-semibold text-gray-900 truncate">
+                        {player.full_name || player.username}
+                      </h3>
+                      {player.skill_level && (
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getSkillLevelColor(player.skill_level)}`}>
+                          {player.skill_level}
+                        </span>
+                      )}
+                      {player.date_of_birth && (
+                        <div className="text-sm text-gray-600 mt-1">
+                          Age: {calculateAge(player.date_of_birth)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Location</p>
+                      <p className="text-sm font-medium text-gray-900">{formatLocation(player)}</p>
+                    </div>
+
+                    {player.gender && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Gender</p>
+                        <p className="text-sm font-medium text-gray-900 capitalize">{player.gender}</p>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Location</p>
-                    <p className="text-sm font-medium text-gray-900">{player.location}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Availability</p>
-                    <div className="flex flex-wrap gap-1">
-                      {getAvailabilityBadges(player.availability)}
-                    </div>
-                  </div>
-
-                  {player.bio && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Bio</p>
-                      <p className="text-sm text-gray-900 line-clamp-2">{player.bio}</p>
-                    </div>
-                  )}
-
-                  {player.tournamentHistory && player.tournamentHistory.length > 0 && (
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Recent Tournaments</p>
-                      <div className="space-y-1">
-                        {player.tournamentHistory.slice(0, 2).map((tournament, index) => (
-                          <p key={index} className="text-xs text-gray-600">• {tournament}</p>
-                        ))}
+                    {player.membership_status && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-1">Membership</p>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          player.membership_status === 'premium' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {player.membership_status}
+                        </span>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                    <span className="text-xs text-gray-500">Last active: {new Date(player.lastActive).toLocaleDateString()}</span>
-                    <button
-                      onClick={() => handleContactPlayer(player)}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                      </svg>
-                      Contact
-                    </button>
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                      <span className="text-xs text-gray-500">
+                        Member since: {new Date(player.created_at).toLocaleDateString()}
+                      </span>
+                      <button
+                        onClick={() => handleContactPlayer(player)}
+                        disabled={!preferences?.is_active}
+                        className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                        </svg>
+                        Contact
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
 
-        {filteredPlayers.length === 0 && (
+        {displayPlayers.length === 0 && !loading && (
           <div className="text-center py-12">
             <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
             <h3 className="mt-2 text-sm font-medium text-gray-900">No players found</h3>
-            <p className="mt-1 text-sm text-gray-500">Try adjusting your search criteria or filters.</p>
+            <p className="mt-1 text-sm text-gray-500">
+              {!user?.latitude || !user?.longitude 
+                ? 'Please update your profile with location information to find nearby players.'
+                : 'Try adjusting your search criteria or filters.'
+              }
+            </p>
+          </div>
+        )}
+
+        {/* Pagination */}
+        {pagination && pagination.pages > 1 && (
+          <div className="flex justify-center mt-12">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page <= 1}
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              
+              {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
+                const page = i + 1;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`px-3 py-2 text-sm font-medium rounded-md ${
+                      pagination.page === page 
+                        ? 'bg-blue-600 text-white' 
+                        : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+              
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page >= pagination.pages}
+                className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -487,7 +552,7 @@ const PlayerFinderPage: React.FC = () => {
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Contact {selectedPlayer.name}
+                Contact {selectedPlayer.full_name || selectedPlayer.username}
               </h3>
               
               <div className="space-y-4">
@@ -511,7 +576,7 @@ const PlayerFinderPage: React.FC = () => {
                     </div>
                     <div className="ml-3">
                       <p className="text-sm text-blue-700">
-                        Your message will be sent as a notification to {selectedPlayer.name}. They can choose to respond or block further contact.
+                        Your message will be sent as a notification to {selectedPlayer.full_name || selectedPlayer.username}. They can choose to respond or block further contact.
                       </p>
                     </div>
                   </div>
@@ -528,8 +593,9 @@ const PlayerFinderPage: React.FC = () => {
                 <button
                   className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                   onClick={sendContactMessage}
+                  disabled={loading}
                 >
-                  Send Message
+                  {loading ? 'Sending...' : 'Send Message'}
                 </button>
               </div>
             </div>
@@ -564,51 +630,107 @@ const PlayerFinderPage: React.FC = () => {
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={privacySettings.isVisible}
-                      onChange={(e) => setPrivacySettings({...privacySettings, isVisible: e.target.checked})}
+                      checked={privacySettings.is_active}
+                      onChange={(e) => setPrivacySettings({...privacySettings, is_active: e.target.checked})}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
                     <span className="ml-2 text-sm font-medium text-gray-700">Can Be Found in Search</span>
                   </label>
                   
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Skill Level Range</label>
+                    <div className="flex space-x-2">
+                      <select
+                        value={privacySettings.skill_level_min || ''}
+                        onChange={(e) => setPrivacySettings({...privacySettings, skill_level_min: e.target.value as any || undefined})}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Min Level</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3.0">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4.0">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5.0">5.0</option>
+                      </select>
+                      <select
+                        value={privacySettings.skill_level_max || ''}
+                        onChange={(e) => setPrivacySettings({...privacySettings, skill_level_max: e.target.value as any || undefined})}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Max Level</option>
+                        <option value="2.5">2.5</option>
+                        <option value="3.0">3.0</option>
+                        <option value="3.5">3.5</option>
+                        <option value="4.0">4.0</option>
+                        <option value="4.5">4.5</option>
+                        <option value="5.0">5.0</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Preferred Gender</label>
+                    <select
+                      value={privacySettings.preferred_gender}
+                      onChange={(e) => setPrivacySettings({...privacySettings, preferred_gender: e.target.value as 'male' | 'female' | 'any'})}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="any">Any Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Search Radius (km)</label>
+                    <input
+                      type="range"
+                      min="5"
+                      max="100"
+                      value={privacySettings.search_radius_km}
+                      onChange={(e) => setPrivacySettings({...privacySettings, search_radius_km: parseInt(e.target.value)})}
+                      className="block w-full"
+                    />
+                    <span className="text-sm text-gray-600">{privacySettings.search_radius_km} km</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Match Type</label>
+                    <select
+                      value={privacySettings.match_type}
+                      onChange={(e) => setPrivacySettings({...privacySettings, match_type: e.target.value as 'singles' | 'doubles' | 'mixed_doubles' | 'any'})}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="any">Any Type</option>
+                      <option value="singles">Singles</option>
+                      <option value="doubles">Doubles</option>
+                      <option value="mixed_doubles">Mixed Doubles</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Contact Method</label>
+                    <select
+                      value={privacySettings.contact_method}
+                      onChange={(e) => setPrivacySettings({...privacySettings, contact_method: e.target.value as 'email' | 'phone' | 'whatsapp' | 'any'})}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="any">Any Method</option>
+                      <option value="email">Email</option>
+                      <option value="phone">Phone</option>
+                      <option value="whatsapp">WhatsApp</option>
+                    </select>
+                  </div>
+
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={privacySettings.showEmail}
-                      onChange={(e) => setPrivacySettings({...privacySettings, showEmail: e.target.checked})}
+                      checked={privacySettings.auto_notify}
+                      onChange={(e) => setPrivacySettings({...privacySettings, auto_notify: e.target.checked})}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                     />
-                    <span className="ml-2 text-sm font-medium text-gray-700">Show Email to Other Players</span>
-                  </label>
-                  
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.showPhone}
-                      onChange={(e) => setPrivacySettings({...privacySettings, showPhone: e.target.checked})}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm font-medium text-gray-700">Show Phone to Other Players</span>
-                  </label>
-                  
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.showLocation}
-                      onChange={(e) => setPrivacySettings({...privacySettings, showLocation: e.target.checked})}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm font-medium text-gray-700">Show Location to Other Players</span>
-                  </label>
-                  
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={privacySettings.allowContact}
-                      onChange={(e) => setPrivacySettings({...privacySettings, allowContact: e.target.checked})}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <span className="ml-2 text-sm font-medium text-gray-700">Allow Other Players to Contact Me</span>
+                    <span className="ml-2 text-sm font-medium text-gray-700">Auto-notify for new matches</span>
                   </label>
                 </div>
               </div>
@@ -623,8 +745,9 @@ const PlayerFinderPage: React.FC = () => {
                 <button
                   className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
                   onClick={updatePrivacySettings}
+                  disabled={loading}
                 >
-                  Save Settings
+                  {loading ? 'Saving...' : 'Save Settings'}
                 </button>
               </div>
             </div>

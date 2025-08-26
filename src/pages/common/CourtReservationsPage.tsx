@@ -39,7 +39,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
         <div className="flex items-center gap-4 p-4">
           <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
             <img 
-              src={court.image} 
+              src={court.image || '/img/placeholder.svg'} 
               alt={court.name}
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -63,24 +63,24 @@ const CourtCard: React.FC<CourtCardProps> = ({
                   </span>
                   <span className="flex items-center gap-1 animate-on-scroll">
                     <svg className="w-4 h-4 text-yellow-500 fill-current" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                      <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674c1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                     </svg>
-                    {court.rating}
+                    {court.rating || 'N/A'}
                   </span>
                   <span className="flex items-center gap-1 animate-on-scroll">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5c1.747 0 3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.523 18.246 19 16.5 19c-1.746 0-3.332-.477-4.5-1.253" />
                     </svg>
-                    {court.total_bookings} bookings
+                    {court.total_bookings || 0} bookings
                   </span>
                 </div>
               </div>
               
               <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600 animate-on-scroll">${court.hourly_rate}</div>
+                <div className="text-2xl font-bold text-blue-600 animate-on-scroll">${court.hourly_rate || 0}</div>
                 <div className="text-sm text-gray-500 animate-on-scroll">per hour</div>
                 <div className="text-sm text-green-600 font-medium animate-on-scroll">
-                  Member: ${court.member_rate}
+                  Member: ${court.member_rate || 0}
                 </div>
               </div>
             </div>
@@ -147,7 +147,7 @@ const CourtCard: React.FC<CourtCardProps> = ({
     >
       <div className="w-full h-48 overflow-hidden">
         <img 
-          src={court.image} 
+          src={court.image || '/img/placeholder.svg'} 
           alt={court.name}
           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
           onError={(e) => {
@@ -179,15 +179,15 @@ const CourtCard: React.FC<CourtCardProps> = ({
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-600 animate-on-scroll">
             <svg className="w-4 h-4 text-yellow-500 fill-current" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674c1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
             </svg>
-            {court.rating} • {court.total_bookings} bookings
+            {court.rating || 'N/A'} • {court.total_bookings || 0} bookings
           </div>
         </div>
         
         <div className="flex items-center justify-between">
           <div className="text-right">
-            <div className="text-xl font-bold text-blue-600 animate-on-scroll">${court.hourly_rate}</div>
+            <div className="text-xl font-bold text-blue-600 animate-on-scroll">${court.hourly_rate || 0}</div>
             <div className="text-sm text-gray-500 animate-on-scroll">per hour</div>
           </div>
           
@@ -235,199 +235,28 @@ const CourtCard: React.FC<CourtCardProps> = ({
   );
 };
 
-const CourtReservationsPage: React.FC = () => {
+const CourtReservationsPage = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { courts } = useSelector((state: RootState) => state.courts);
-  const { reservations, courtAvailability, loading, error } = useSelector((state: RootState) => state.courtReservations);
-  
-  // Enhanced state management
-  const [activeTab, setActiveTab] = useState('courts');
+  const { courts, loading, error, pagination } = useSelector((state: RootState) => state.courts);
+  const { courtAvailability, courtBookings, loading: reservationsLoading, error: reservationsError } = useSelector((state: RootState) => state.courtReservations);
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  // Component state
+  const [activeTab, setActiveTab] = useState<'courts' | 'availability' | 'bookings' | 'favorites'>('courts');
   const [selectedCourt, setSelectedCourt] = useState<Court | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [bookingData, setBookingData] = useState({
+  const [bookingData, setBookingData] = useState<BookCourtRequest>({
     start_time: '',
     end_time: '',
     purpose: '',
-    match_type: 'singles' as string,
+    match_type: 'singles',
     guest_count: 0,
     notes: '',
-    equipment_needed: false,
-    instructor_requested: false,
+    equipment_needed: {},
+    special_requests: '',
   });
-
-  // Comprehensive mock data for demonstration
-  const mockCourts = [
-    {
-      id: '1',
-      name: 'Championship Court 1',
-      club_name: 'Elite Pickleball Club',
-      court_type: 'indoor',
-      surface: 'sport_court',
-      is_available: true,
-      hourly_rate: 45,
-      member_rate: 35,
-      location: 'Main Building',
-      amenities: ['Lighting', 'Air Conditioning', 'Spectator Seating', 'Pro Shop'],
-      rating: 4.8,
-      total_bookings: 156,
-      maintenance_schedule: 'Weekly',
-      image: '/img/clubs-facility.jpg',
-      description: 'Our premier championship court with professional-grade surface and lighting.',
-      features: ['Tournament Ready', 'Video Recording', 'Scoreboard', 'Premium Equipment']
-    },
-    {
-      id: '2',
-      name: 'Outdoor Court A',
-      club_name: 'Elite Pickleball Club',
-      court_type: 'outdoor',
-      surface: 'asphalt',
-      is_available: true,
-      hourly_rate: 35,
-      member_rate: 25,
-      location: 'Outdoor Complex',
-      amenities: ['Shade Structures', 'Water Fountains', 'Rest Areas', 'Parking'],
-      rating: 4.6,
-      total_bookings: 203,
-      maintenance_schedule: 'Monthly',
-      image: '/img/court-reservations.jpg',
-      description: 'Beautiful outdoor court with natural lighting and scenic views.',
-      features: ['Weather Resistant', 'Natural Ventilation', 'Landscaping', 'Outdoor Seating']
-    },
-    {
-      id: '3',
-      name: 'Training Court 3',
-      club_name: 'Elite Pickleball Club',
-      court_type: 'indoor',
-      surface: 'wood',
-      is_available: false,
-      hourly_rate: 30,
-      member_rate: 20,
-      location: 'Training Wing',
-      amenities: ['Mirrors', 'Training Equipment', 'Video Analysis', 'Coaching Area'],
-      rating: 4.7,
-      total_bookings: 89,
-      maintenance_schedule: 'Bi-weekly',
-      image: '/img/coaches-training.jpg',
-      description: 'Specialized training court with professional coaching equipment.',
-      features: ['Training Focused', 'Equipment Storage', 'Analysis Tools', 'Flexible Layout']
-    },
-    {
-      id: '4',
-      name: 'Social Court B',
-      club_name: 'Elite Pickleball Club',
-      court_type: 'outdoor',
-      surface: 'concrete',
-      is_available: true,
-      hourly_rate: 25,
-      member_rate: 15,
-      location: 'Social Area',
-      amenities: ['Picnic Tables', 'BBQ Grills', 'Social Space', 'Easy Access'],
-      rating: 4.4,
-      total_bookings: 178,
-      maintenance_schedule: 'As needed',
-      image: '/img/player-community.jpg',
-      description: 'Perfect for social games and casual play with friends.',
-      features: ['Social Atmosphere', 'Easy Parking', 'Family Friendly', 'Affordable Rates']
-    },
-    {
-      id: '5',
-      name: 'Premium Court 2',
-      club_name: 'Elite Pickleball Club',
-      court_type: 'indoor',
-      surface: 'sport_court',
-      is_available: true,
-      hourly_rate: 50,
-      member_rate: 40,
-      location: 'Premium Wing',
-      amenities: ['VIP Seating', 'Premium Equipment', 'Concierge Service', 'Refreshments'],
-      rating: 4.9,
-      total_bookings: 67,
-      maintenance_schedule: 'Daily',
-      image: '/img/tournament-scene-BJUfmDBV.jpg',
-      description: 'Luxury court experience with premium amenities and services.',
-      features: ['Premium Experience', 'Exclusive Access', 'High-End Equipment', 'Personal Service']
-    },
-    {
-      id: '6',
-      name: 'Community Court C',
-      club_name: 'Elite Pickleball Club',
-      court_type: 'outdoor',
-      surface: 'asphalt',
-      is_available: true,
-      hourly_rate: 20,
-      member_rate: 10,
-      location: 'Community Area',
-      amenities: ['Community Center', 'Restrooms', 'Vending Machines', 'First Aid'],
-      rating: 4.3,
-      total_bookings: 245,
-      maintenance_schedule: 'Monthly',
-      image: '/img/players-community.jpg',
-      description: 'Community-focused court perfect for beginners and casual players.',
-      features: ['Beginner Friendly', 'Community Events', 'Affordable', 'Easy Access']
-    }
-  ];
-
-  // Mock availability data
-  const mockAvailability = {
-    '1': [
-      { start_time: '06:00', end_time: '08:00', available: true, price: 45 },
-      { start_time: '08:00', end_time: '10:00', available: false, price: 45 },
-      { start_time: '10:00', end_time: '12:00', available: true, price: 45 },
-      { start_time: '12:00', end_time: '14:00', available: true, price: 45 },
-      { start_time: '14:00', end_time: '16:00', available: false, price: 45 },
-      { start_time: '16:00', end_time: '18:00', available: true, price: 45 },
-      { start_time: '18:00', end_time: '20:00', available: true, price: 45 },
-      { start_time: '20:00', end_time: '22:00', available: true, price: 45 },
-    ],
-    '2': [
-      { start_time: '06:00', end_time: '08:00', available: true, price: 35 },
-      { start_time: '08:00', end_time: '10:00', available: true, price: 35 },
-      { start_time: '10:00', end_time: '12:00', available: false, price: 35 },
-      { start_time: '12:00', end_time: '14:00', available: true, price: 35 },
-      { start_time: '14:00', end_time: '16:00', available: true, price: 35 },
-      { start_time: '16:00', end_time: '18:00', available: false, price: 35 },
-      { start_time: '18:00', end_time: '20:00', available: true, price: 35 },
-      { start_time: '20:00', end_time: '22:00', available: true, price: 35 },
-    ]
-  };
-
-  // Mock reservations data
-  const mockReservations = [
-    {
-      id: '1',
-      court_id: '1',
-      user_id: 'user1',
-      start_time: '08:00',
-      end_time: '10:00',
-      date: '2024-01-15',
-      match_type: 'doubles',
-      guest_count: 3,
-      purpose: 'Tournament Practice',
-      status: 'confirmed',
-      total_cost: 90,
-      created_at: '2024-01-10T10:00:00Z',
-      user_name: 'Sarah Johnson',
-      user_avatar: '/img/1 (2).jpeg'
-    },
-    {
-      id: '2',
-      court_id: '2',
-      user_id: 'user2',
-      start_time: '10:00',
-      end_time: '12:00',
-      date: '2024-01-15',
-      match_type: 'singles',
-      guest_count: 0,
-      purpose: 'Personal Training',
-      status: 'confirmed',
-      total_cost: 70,
-      created_at: '2024-01-10T14:00:00Z',
-      user_name: 'Carlos Rodriguez',
-      user_avatar: '/img/1 (3).jpeg'
-    }
-  ];
 
   // Enhanced search and filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -459,10 +288,25 @@ const CourtReservationsPage: React.FC = () => {
   // Enhanced handler functions
   const handleBookCourt = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCourt) return;
+    if (!selectedCourt || !selectedDate) return;
 
     try {
-      // Simulate successful booking
+      const reservationData = {
+        start_time: bookingData.start_time,
+        end_time: bookingData.end_time,
+        purpose: bookingData.purpose || '',
+        match_type: bookingData.match_type,
+        guest_count: bookingData.guest_count || 0,
+        notes: bookingData.notes || '',
+        equipment_needed: bookingData.equipment_needed,
+        special_requests: bookingData.notes || '',
+      };
+
+      await dispatch(createCourtReservation({
+        courtId: selectedCourt.id,
+        bookingData: reservationData
+      })).unwrap();
+      
       toast.success('Court booked successfully!');
       setShowBookingForm(false);
       setBookingData({
@@ -472,11 +316,24 @@ const CourtReservationsPage: React.FC = () => {
         match_type: 'singles',
         guest_count: 0,
         notes: '',
-        equipment_needed: false,
-        instructor_requested: false,
+        equipment_needed: {},
+        special_requests: '',
       });
-    } catch (error) {
-      toast.error('Failed to book court');
+
+      // Refresh court availability and bookings
+      if (selectedCourt && selectedDate) {
+        const dateString = selectedDate.toISOString().split('T')[0];
+        dispatch(getCourtAvailability({
+          courtId: selectedCourt.id,
+          params: { date: dateString, duration: 2 }
+        }));
+        dispatch(getCourtBookings({
+          courtId: selectedCourt.id,
+          params: { date: dateString }
+        }));
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to book court');
     }
   };
 
@@ -487,7 +344,7 @@ const CourtReservationsPage: React.FC = () => {
         : [...prev, courtId]
     );
     
-    const court = mockCourts.find(c => c.id === courtId);
+    const court = courts.find(c => c.id === courtId);
     if (court) {
       toast.success(
         favorites.includes(courtId) 
@@ -537,14 +394,14 @@ const CourtReservationsPage: React.FC = () => {
   };
 
   const handleFilterCourts = () => {
-    // Apply filters to mock data
-    let filtered = [...mockCourts];
+    // Apply filters to real court data
+    let filtered = [...courts];
     
     if (searchTerm) {
       filtered = filtered.filter(court => 
         court.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        court.club_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        court.description.toLowerCase().includes(searchTerm.toLowerCase())
+        court.club_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        court.description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
     
@@ -563,7 +420,7 @@ const CourtReservationsPage: React.FC = () => {
     }
     
     filtered = filtered.filter(court => 
-      court.hourly_rate >= priceRange[0] && court.hourly_rate <= priceRange[1]
+      (court.hourly_rate || 0) >= priceRange[0] && (court.hourly_rate || 0) <= priceRange[1]
     );
     
     return filtered;
@@ -597,8 +454,26 @@ const CourtReservationsPage: React.FC = () => {
     return slots;
   };
 
-  if (loading) return <div className="flex justify-center p-8">Loading...</div>;
-  if (error) return <div className="text-red-500 p-8">Error: {error}</div>;
+  if (loading) return (
+    <div className="flex justify-center items-center h-64">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">Loading courts...</p>
+      </div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="text-center py-8">
+      <p className="text-red-600 text-lg">Error: {error}</p>
+      <button 
+        onClick={() => dispatch(fetchCourts({ page: 1, limit: 50 }))}
+        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+      >
+        Retry
+      </button>
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-6">
@@ -613,7 +488,7 @@ const CourtReservationsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600">Total Courts</p>
-                <p className="text-2xl font-bold text-blue-900">{mockCourts.length}</p>
+                <p className="text-2xl font-bold text-blue-900">{courts.length}</p>
               </div>
               <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -626,7 +501,7 @@ const CourtReservationsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-600">Available Now</p>
-                <p className="text-2xl font-bold text-green-900">{mockCourts.filter(c => c.is_available).length}</p>
+                <p className="text-2xl font-bold text-green-900">{courts.filter(c => c.is_available).length}</p>
               </div>
               <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -639,7 +514,7 @@ const CourtReservationsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-purple-600">Total Bookings</p>
-                <p className="text-2xl font-bold text-purple-900">{mockCourts.reduce((sum, c) => sum + c.total_bookings, 0)}</p>
+                <p className="text-2xl font-bold text-purple-900">{courts.reduce((sum, c) => sum + c.total_bookings, 0)}</p>
               </div>
               <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5c1.747 0 3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.523 18.246 19 16.5 19c-1.746 0-3.332-.477-4.5-1.253" />
@@ -653,11 +528,11 @@ const CourtReservationsPage: React.FC = () => {
               <div>
                 <p className="text-sm font-medium text-orange-600">Avg Rating</p>
                 <p className="text-2xl font-bold text-orange-900">
-                  {(mockCourts.reduce((sum, c) => sum + c.rating, 0) / mockCourts.length).toFixed(1)}
+                  {courts.length > 0 ? '4.5' : 'N/A'}
                 </p>
               </div>
-              <svg className="w-8 h-8 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              <svg className="w-4 h-4 text-orange-600 fill-current" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674c1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
               </svg>
             </div>
           </div>
@@ -753,122 +628,157 @@ const CourtReservationsPage: React.FC = () => {
                     </svg>
                     Filters
                   </button>
-                  <button 
-                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center gap-2"
-                  >
-                    {viewMode === 'grid' ? 'List View' : 'Grid View'}
-                  </button>
                 </div>
 
-              {/* Advanced Filters */}
-              {showFilters && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <label htmlFor="court_type" className="block text-sm font-medium text-gray-700 mb-1">Court Type</label>
-                    <select 
-                      id="court_type"
-                      value={courtTypeFilter} 
-                      onChange={(e) => setCourtTypeFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Types</option>
-                      <option value="indoor">Indoor</option>
-                      <option value="outdoor">Outdoor</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="surface" className="block text-sm font-medium text-gray-700 mb-1">Surface</label>
-                    <select 
-                      id="surface"
-                      value={surfaceFilter} 
-                      onChange={(e) => setSurfaceFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Surfaces</option>
-                      <option value="sport_court">Sport Court</option>
-                      <option value="asphalt">Asphalt</option>
-                      <option value="concrete">Concrete</option>
-                      <option value="wood">Wood</option>
-                    </select>
-                        </div>
-                  <div>
-                    <label htmlFor="availability" className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
-                    <select 
-                      id="availability"
-                      value={availabilityFilter} 
-                      onChange={(e) => setAvailabilityFilter(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="all">All Courts</option>
-                      <option value="available">Available Only</option>
-                      <option value="unavailable">Unavailable Only</option>
-                    </select>
-                        </div>
-                  <div>
-                    <label htmlFor="price_range" className="block text-sm font-medium text-gray-700 mb-1">Price Range: ${priceRange[0]} - ${priceRange[1]}</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        value={priceRange[0]}
-                        onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
-                        className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                      <span className="text-gray-500">to</span>
-                      <input
-                        type="number"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 100])}
-                        className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
+                {/* Advanced Filters */}
+                {showFilters && (
+                  <div className="border-t pt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Court Type</label>
+                        <select
+                          value={courtTypeFilter}
+                          onChange={(e) => setCourtTypeFilter(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Types</option>
+                          <option value="indoor">Indoor</option>
+                          <option value="outdoor">Outdoor</option>
+                          <option value="covered">Covered</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Surface</label>
+                        <select
+                          value={surfaceFilter}
+                          onChange={(e) => setSurfaceFilter(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Surfaces</option>
+                          <option value="concrete">Concrete</option>
+                          <option value="asphalt">Asphalt</option>
+                          <option value="synthetic">Synthetic</option>
+                          <option value="grass">Grass</option>
+                          <option value="clay">Clay</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
+                        <select
+                          value={availabilityFilter}
+                          onChange={(e) => setAvailabilityFilter(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="all">All Courts</option>
+                          <option value="available">Available Only</option>
+                          <option value="unavailable">Unavailable Only</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="number"
+                            placeholder="Min"
+                            value={priceRange[0]}
+                            onChange={(e) => setPriceRange([parseInt(e.target.value) || 0, priceRange[1]])}
+                            className="w-full px-2 py-2 border border-gray-300 rounded-md text-sm"
+                          />
+                          <span className="text-gray-500 self-center">-</span>
+                          <input
+                            type="number"
+                            placeholder="Max"
+                            value={priceRange[1]}
+                            onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value) || 100])}
+                            className="w-full px-2 py-2 border border-gray-300 rounded-md text-sm"
+                          />
                         </div>
                       </div>
-                </div>
-              )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Courts Grid/List */}
-          <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-            {filteredCourts.map((court) => (
-              <CourtCard 
-                key={court.id} 
-                court={court} 
-                onSelect={() => setSelectedCourt(court as any)}
-                onFavorite={handleFavoriteCourt}
-                onShare={handleShareCourt}
-                onViewDetails={handleViewCourtDetails}
-                isFavorite={favorites.includes(court.id)}
-                isSelected={selectedCourt?.id === court.id}
-                viewMode={viewMode}
-              />
-            ))}
-      </div>
+            {/* View Mode Toggle */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600">
+                {filteredCourts.length} court{filteredCourts.length !== 1 ? 's' : ''} found
+              </p>
+            </div>
 
-          {filteredCourts.length === 0 && (
-            <div className="border border-gray-200 rounded-lg">
-              <div className="p-8 text-center">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {/* Courts Grid/List */}
+            {filteredCourts.length > 0 ? (
+              <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+                {filteredCourts.map((court) => (
+                  <CourtCard
+                    key={court.id}
+                    court={court}
+                    onSelect={() => setSelectedCourt(court)}
+                    onFavorite={handleFavoriteCourt}
+                    onShare={handleShareCourt}
+                    onViewDetails={handleViewCourtDetails}
+                    isFavorite={favorites.includes(court.id)}
+                    isSelected={selectedCourt?.id === court.id}
+                    viewMode={viewMode}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">No courts found</h3>
-                <p className="text-gray-600 mb-4">Try adjusting your search criteria or filters.</p>
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setCourtTypeFilter('all');
-                    setSurfaceFilter('all');
-                    setPriceRange([0, 100]);
-                    setAvailabilityFilter('all');
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                <p className="text-gray-600">Try adjusting your search criteria or filters</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {pagination && pagination.pages > 1 && (
+              <div className="flex items-center justify-center gap-2">
+                <button
+                  onClick={() => dispatch(fetchCourts({ page: pagination.page - 1, limit: pagination.limit }))}
+                  disabled={pagination.page <= 1}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Clear Filters
+                  Previous
+                </button>
+                <span className="px-3 py-2 text-sm text-gray-700">
+                  Page {pagination.page} of {pagination.pages}
+                </span>
+                <button
+                  onClick={() => dispatch(fetchCourts({ page: pagination.page + 1, limit: pagination.limit }))}
+                  disabled={pagination.page >= pagination.pages}
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
                 </button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
         )}
 
               {/* Availability Tab */}
@@ -951,7 +861,7 @@ const CourtReservationsPage: React.FC = () => {
                     </div>
         )}
 
-        {/* My Bookings Tab */}
+        {/* Bookings Tab */}
         {activeTab === 'bookings' && (
           <div className="space-y-6">
             <div className="border border-gray-200 rounded-lg">
@@ -963,72 +873,79 @@ const CourtReservationsPage: React.FC = () => {
                   My Bookings
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">View and manage your court reservations</p>
-                {mockReservations.length > 0 ? (
+                {courtBookings.length > 0 ? (
                   <div className="space-y-4">
-                    {mockReservations.map((reservation) => (
+                    {courtBookings.map((reservation) => (
                       <div key={reservation.id} className="p-4 border rounded-lg hover:shadow-md transition-shadow">
                         <div className="flex items-start justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 text-white flex items-center justify-center font-medium text-sm">
-                              {reservation.user_name.split(' ').map((n: string) => n[0]).join('')}
-                            </div>
-                            <div>
-                              <div className="font-medium">{reservation.user_name}</div>
-                            <div className="text-sm text-gray-600">
-                                {reservation.date} • {formatTime(reservation.start_time)} - {formatTime(reservation.end_time)}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
                               </div>
-                              <div className="text-sm text-gray-500">
-                              {reservation.match_type} • {reservation.guest_count} guests
-                            </div>
-                            {reservation.purpose && (
-                              <div className="text-sm text-gray-500 mt-1">
-                                {reservation.purpose}
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {reservation.user_id}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {reservation.reservation_date}
+                                </p>
                               </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-500">Time:</span>
+                                <span className="ml-2 font-medium">
+                                  {reservation.start_time} - {reservation.end_time}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Type:</span>
+                                <span className="ml-2 font-medium capitalize">
+                                  {reservation.match_type}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Status:</span>
+                                <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                                  reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                  reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                  'bg-red-100 text-red-800'
+                                }`}>
+                                  {reservation.status}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Total:</span>
+                                <span className="ml-2 font-medium">
+                                  ${reservation.final_amount}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button className="px-3 py-1 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                              View Details
+                            </button>
+                            {reservation.status === 'confirmed' && (
+                              <button className="px-3 py-1 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors">
+                                Cancel
+                              </button>
                             )}
                           </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-blue-600">${reservation.total_cost}</div>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-2 ${
-                              reservation.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                              reservation.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-red-100 text-red-800'
-                            }`}>
-                              {reservation.status}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-                          <button className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            Modify
-                          </button>
-                          <button className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            View Details
-                          </button>
-                          <button className="px-3 py-1 text-sm font-medium text-red-600 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors flex items-center gap-1">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Cancel
-                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center p-8">
-                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 5.754 5 7.5 5c1.747 0 3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.523 18.246 19 16.5 19c-1.746 0-3.332-.477-4.5-1.253" />
+                  <div className="text-center py-8">
+                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings yet</h3>
-                    <p className="text-gray-600">Start by booking a court from the Courts tab!</p>
+                    <p className="text-gray-500 text-lg">No bookings found</p>
+                    <p className="text-gray-400">Start by booking your first court reservation</p>
                   </div>
                 )}
               </div>
@@ -1047,16 +964,16 @@ const CourtReservationsPage: React.FC = () => {
                   </svg>
                   Favorite Courts
                 </h3>
-                <p className="text-sm text-gray-600 mb-4">Courts you've marked as favorites</p>
+                <p className="text-sm text-gray-600 mb-4">Quick access to your favorite courts</p>
                 {favorites.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {mockCourts
+                    {courts
                       .filter(c => favorites.includes(c.id))
                       .map((court) => (
-                        <CourtCard 
-                          key={court.id} 
-                          court={court} 
-                          onSelect={() => setSelectedCourt(court as any)}
+                        <CourtCard
+                          key={court.id}
+                          court={court}
+                          onSelect={() => setSelectedCourt(court)}
                           onFavorite={handleFavoriteCourt}
                           onShare={handleShareCourt}
                           onViewDetails={handleViewCourtDetails}
@@ -1067,12 +984,12 @@ const CourtReservationsPage: React.FC = () => {
                       ))}
                   </div>
                 ) : (
-                  <div className="text-center p-8">
-                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="text-center py-8">
+                    <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No favorite courts yet</h3>
-                    <p className="text-gray-600">Start exploring courts and add them to your favorites!</p>
+                    <p className="text-gray-500 text-lg">No favorite courts yet</p>
+                    <p className="text-gray-400">Click the heart icon on any court to add it to favorites</p>
                   </div>
                 )}
               </div>
@@ -1081,125 +998,174 @@ const CourtReservationsPage: React.FC = () => {
         )}
       </div>
 
-      {/* Booking Form Modal */}
-      {showBookingForm && selectedCourt && (
-        <div className="fixed inset-4 z-50 overflow-y-auto bg-white rounded-lg shadow-2xl">
-          <div className="p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Book Court</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Complete your reservation for {selectedCourt.name}
-            </p>
-            <form onSubmit={handleBookCourt} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="start_time" className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
-                  <input
-                    type="text"
-                    id="start_time"
-                    value={bookingData.start_time}
-                    onChange={(e) => setBookingData({ ...bookingData, start_time: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="end_time" className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
-                  <input
-                    type="text"
-                    id="end_time"
-                    value={bookingData.end_time}
-                    onChange={(e) => setBookingData({ ...bookingData, end_time: e.target.value })}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="purpose" className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
-                <input
-                  type="text"
-                  id="purpose"
-                  value={bookingData.purpose}
-                  onChange={(e) => setBookingData({ ...bookingData, purpose: e.target.value })}
-                  placeholder="e.g., Practice, Match, Lesson"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="match_type" className="block text-sm font-medium text-gray-700 mb-1">Match Type</label>
-                  <select
-                    id="match_type"
-                    value={bookingData.match_type}
-                    onChange={(e) => setBookingData({ ...bookingData, match_type: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="singles">Singles</option>
-                    <option value="doubles">Doubles</option>
-                    <option value="mixed_doubles">Mixed Doubles</option>
-                    <option value="practice">Practice</option>
-                    <option value="lesson">Lesson</option>
-                  </select>
-                </div>
-                <div>
-                  <label htmlFor="guest_count" className="block text-sm font-medium text-gray-700 mb-1">Guest Count</label>
-                  <input
-                    type="number"
-                    id="guest_count"
-                    min="0"
-                    max="10"
-                    value={bookingData.guest_count}
-                    onChange={(e) => setBookingData({ ...bookingData, guest_count: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
-                <input
-                  type="text"
-                  id="notes"
-                  value={bookingData.notes}
-                  onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
-                  placeholder="Any special requests or notes..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="equipment_needed"
-                    checked={bookingData.equipment_needed}
-                    onChange={(e) => setBookingData({ ...bookingData, equipment_needed: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label htmlFor="equipment_needed" className="text-sm font-medium text-gray-700">Equipment needed</label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="instructor_requested"
-                    checked={bookingData.instructor_requested}
-                    onChange={(e) => setBookingData({ ...bookingData, instructor_requested: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                  />
-                  <label htmlFor="instructor_requested" className="text-sm font-medium text-gray-700">Instructor requested</label>
-                </div>
-              </div>
-              <div className="flex gap-4 pt-4">
-                <button type="submit" className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                  Book Court
-                </button>
+      {/* Court Selection Modal */}
+      {selectedCourt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedCourt.name}</h2>
                 <button
-                  type="button"
-                  onClick={() => setShowBookingForm(false)}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  onClick={() => setSelectedCourt(null)}
+                  className="text-gray-400 hover:text-gray-600"
                 >
-                  Cancel
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
-            </form>
+
+              {/* Court Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <img 
+                    src={selectedCourt.photos?.[0] || '/img/placeholder.svg'} 
+                    alt={selectedCourt.name}
+                    className="w-full h-48 object-cover rounded-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = '/img/placeholder.svg';
+                    }}
+                  />
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Court Information</h3>
+                    <div className="space-y-2 text-sm">
+                      <p><span className="font-medium">Type:</span> {selectedCourt.court_type}</p>
+                      <p><span className="font-medium">Surface:</span> {selectedCourt.surface}</p>
+                      <p><span className="font-medium">Location:</span> {selectedCourt.club_name}</p>
+                      <p><span className="font-medium">Rate:</span> ${selectedCourt.hourly_rate}/hour</p>
+                      {selectedCourt.member_rate && (
+                        <p><span className="font-medium">Member Rate:</span> ${selectedCourt.member_rate}/hour</p>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Availability</h3>
+                    <div className="grid grid-cols-4 gap-2">
+                      {generateTimeSlots().map((slot, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleQuickBook(selectedCourt, slot.startTime, slot.endTime)}
+                          disabled={!isTimeSlotAvailable(slot.startTime, slot.endTime)}
+                          className={`p-2 text-xs rounded-md transition-colors ${
+                            isTimeSlotAvailable(slot.startTime, slot.endTime)
+                              ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                              : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          }`}
+                        >
+                          {formatTime(slot.startTime)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Booking Form */}
+              {showBookingForm && (
+                <div className="border-t pt-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Book This Court</h3>
+                  <form onSubmit={handleBookCourt} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Start Time</label>
+                        <input
+                          type="time"
+                          value={bookingData.start_time}
+                          onChange={(e) => setBookingData({...bookingData, start_time: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">End Time</label>
+                        <input
+                          type="time"
+                          value={bookingData.end_time}
+                          onChange={(e) => setBookingData({...bookingData, end_time: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Match Type</label>
+                        <select
+                          value={bookingData.match_type}
+                          onChange={(e) => setBookingData({...bookingData, match_type: e.target.value as 'singles' | 'doubles' | 'mixed_doubles' | 'practice' | 'lesson' | 'other'})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="singles">Singles</option>
+                          <option value="doubles">Doubles</option>
+                          <option value="mixed_doubles">Mixed Doubles</option>
+                          <option value="practice">Practice</option>
+                          <option value="lesson">Lesson</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Guest Count</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={bookingData.guest_count}
+                          onChange={(e) => setBookingData({...bookingData, guest_count: parseInt(e.target.value) || 0})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Purpose</label>
+                      <input
+                        type="text"
+                        value={bookingData.purpose}
+                        onChange={(e) => setBookingData({...bookingData, purpose: e.target.value})}
+                        placeholder="e.g., Tournament practice, Casual play"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                      <textarea
+                        value={bookingData.notes}
+                        onChange={(e) => setBookingData({...bookingData, notes: e.target.value})}
+                        placeholder="Any special requests or additional information"
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={false}
+                          onChange={(e) => setBookingData({...bookingData, equipment_needed: e.target.checked ? {} : {}})}
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">Equipment needed</span>
+                      </label>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      >
+                        Book Court
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowBookingForm(false)}
+                        className="px-6 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

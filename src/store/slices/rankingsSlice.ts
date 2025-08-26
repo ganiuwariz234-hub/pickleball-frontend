@@ -35,6 +35,7 @@ interface RankingIssueUpdate {
 interface RankingsState {
   rankingIssues: RankingIssue[];
   selectedIssue: RankingIssue | null;
+  playerRankings: any[]; // Add player rankings state
   loading: boolean;
   error: string | null;
   pagination: {
@@ -54,6 +55,7 @@ interface RankingsState {
 const initialState: RankingsState = {
   rankingIssues: [],
   selectedIssue: null,
+  playerRankings: [], // Initialize player rankings
   loading: false,
   error: null,
   pagination: null,
@@ -71,6 +73,22 @@ export const fetchRankingIssues = createAsyncThunk(
   }) => {
     const queryString = new URLSearchParams(params as Record<string, string>).toString();
     const response = await api.get(`/admin/rankings/issues${queryString ? `?${queryString}` : ''}`);
+    return response;
+  }
+);
+
+export const fetchPlayerRankings = createAsyncThunk(
+  'rankings/fetchPlayerRankings',
+  async (params?: {
+    category?: string;
+    skill_level?: string;
+    state?: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const queryString = new URLSearchParams(params as Record<string, string>).toString();
+    const response = await api.get(`/rankings${queryString ? `?${queryString}` : ''}`);
     return response;
   }
 );
@@ -339,6 +357,21 @@ const rankingsSlice = createSlice({
       .addCase(exportRankingsReport.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || 'Failed to export rankings report';
+      })
+      // Fetch Player Rankings
+      .addCase(fetchPlayerRankings.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchPlayerRankings.fulfilled, (state, action) => {
+        state.loading = false;
+        const payload = action.payload as any;
+        state.playerRankings = payload?.data?.rankings || [];
+        state.pagination = payload?.data?.pagination || null;
+      })
+      .addCase(fetchPlayerRankings.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || 'Failed to fetch player rankings';
       });
   },
 });
