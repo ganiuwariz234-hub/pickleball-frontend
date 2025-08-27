@@ -1,5 +1,25 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '../../../store';
+import { 
+  fetchCourtBookings, 
+  fetchCourtStatus, 
+  fetchTimeSlots 
+} from '../../../store/slices/clubDashboardSlice';
 import { toast } from 'sonner';
+import { 
+  Calendar, 
+  Clock, 
+  MapPin, 
+  Users, 
+  DollarSign, 
+  Wrench, 
+  CheckCircle, 
+  XCircle,
+  AlertTriangle,
+  Plus,
+  RefreshCw
+} from 'lucide-react';
 
 interface CourtBooking {
   status: 'available' | 'booked' | 'maintenance' | 'reserved';
@@ -8,6 +28,14 @@ interface CourtBooking {
   bookingId?: string;
   startTime: string;
   endTime: string;
+}
+
+interface Court {
+  id: number;
+  name: string;
+  status: string;
+  currentTime: string;
+  nextBooking: string;
 }
 
 interface CourtRentalProps {
@@ -24,12 +52,21 @@ const CourtRental: React.FC<CourtRentalProps> = ({
   setSelectedDate,
   selectedCourt,
   setSelectedCourt,
-  timeSlots,
-  courtBookings
+  timeSlots: initialTimeSlots,
+  courtBookings: initialCourtBookings
 }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { courtStatus, loading, error } = useSelector((state: RootState) => state.clubDashboard);
+  
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>('');
   const [selectedCourtForBooking, setSelectedCourtForBooking] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [localCourtBookings, setLocalCourtBookings] = useState<Record<string, Record<string, CourtBooking>>>(initialCourtBookings || {});
+  const [localTimeSlots, setLocalTimeSlots] = useState<string[]>(initialTimeSlots || []);
+  const [localCourts, setLocalCourts] = useState<Court[]>([]);
+  
   const [bookingData, setBookingData] = useState({
     playerName: '',
     playerEmail: '',
@@ -37,6 +74,56 @@ const CourtRental: React.FC<CourtRentalProps> = ({
     duration: '1',
     specialRequests: ''
   });
+
+  // Fetch data when component mounts or date changes
+  useEffect(() => {
+    if (user?.club_id) {
+      refreshData();
+    }
+  }, [user?.club_id, selectedDate]);
+
+  // Update local state when props change
+  useEffect(() => {
+    setLocalCourtBookings(initialCourtBookings || {});
+    setLocalTimeSlots(initialTimeSlots || []);
+  }, [initialCourtBookings, initialTimeSlots]);
+
+  // Update local courts when Redux state changes
+  useEffect(() => {
+    if (courtStatus && courtStatus.length > 0) {
+      setLocalCourts(courtStatus);
+    }
+  }, [courtStatus]);
+
+  const refreshData = async () => {
+    if (!user?.club_id) return;
+    
+    setIsLoading(true);
+    try {
+      const [bookingsResult, courtStatusResult, timeSlotsResult] = await Promise.all([
+        dispatch(fetchCourtBookings({ clubId: user.club_id, date: selectedDate })).unwrap(),
+        dispatch(fetchCourtStatus(user.club_id)).unwrap(),
+        dispatch(fetchTimeSlots(user.club_id)).unwrap()
+      ]);
+
+      if (bookingsResult) {
+        setLocalCourtBookings(bookingsResult);
+      }
+      if (timeSlotsResult) {
+        setLocalTimeSlots(timeSlotsResult);
+      }
+      if (courtStatusResult) {
+        setLocalCourts(courtStatusResult);
+      }
+
+      toast.success('Court data refreshed successfully!');
+    } catch (error) {
+      console.error('Error refreshing court data:', error);
+      toast.error('Failed to refresh court data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Generate calendar dates for the current month
   const calendarDates = useMemo(() => {
@@ -65,24 +152,69 @@ const CourtRental: React.FC<CourtRentalProps> = ({
     setShowBookingModal(true);
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     if (!bookingData.playerName || !bookingData.playerEmail) {
       toast.error('Please fill in player name and email');
       return;
     }
 
-    // In a real app, this would make an API call to create the booking
-    toast.success(`Court ${selectedCourtForBooking} booked for ${bookingData.playerName} at ${selectedTimeSlot}`);
-    
-    // Reset form
-    setBookingData({
-      playerName: '',
-      playerEmail: '',
-      playerPhone: '',
-      duration: '1',
-      specialRequests: ''
-    });
-    setShowBookingModal(false);
+    if (!user?.club_id) {
+      toast.error('User not authenticated');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Create booking data
+      const startTime = new Date(`${selectedDate}T${selectedTimeSlot}`);
+      const endTime = new Date(startTime.getTime() + parseInt(bookingData.duration) * 60 * 60 * 1000);
+      
+      const bookingPayload = {
+        court_id: selectedCourtForBooking,
+        user_id: user.id,
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        duration: parseInt(bookingData.duration),
+        special_requests: bookingData.specialRequests,
+        total_amount: 50, // Default price since CourtStatus doesn't have hourly_rate
+      };
+
+      // Make API call to create booking
+      const response = await fetch(`/api/v1/court-reservations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(bookingPayload)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(`Court ${selectedCourtForBooking} booked successfully for ${bookingData.playerName}`);
+        
+        // Refresh data to show new booking
+        await refreshData();
+        
+        // Reset form
+        setBookingData({
+          playerName: '',
+          playerEmail: '',
+          playerPhone: '',
+          duration: '1',
+          specialRequests: ''
+        });
+        setShowBookingModal(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.message || 'Failed to create booking');
+      }
+    } catch (error) {
+      console.error('Error creating booking:', error);
+      toast.error('Failed to create booking');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getBookingStatusColor = (status: string) => {
@@ -97,21 +229,10 @@ const CourtRental: React.FC<CourtRentalProps> = ({
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'available': return (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-        </svg>
-      );
-      case 'booked': return (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      );
-      case 'maintenance': return (
-        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-        </svg>
-      );
+      case 'available': return <CheckCircle className="h-4 w-4" />;
+      case 'booked': return <XCircle className="h-4 w-4" />;
+      case 'maintenance': return <Wrench className="h-4 w-4" />;
+      case 'reserved': return <CheckCircle className="h-4 w-4" />;
       default: return null;
     }
   };
@@ -125,12 +246,108 @@ const CourtRental: React.FC<CourtRentalProps> = ({
     return date.toISOString().split('T')[0] === selectedDate;
   };
 
+  const getCourtAvailability = (courtId: number, timeSlot: string) => {
+    const courtBookings = localCourtBookings[selectedDate] || {};
+    const courtName = localCourts.find(c => c.id === courtId)?.name;
+    
+    if (!courtName || !courtBookings[courtName]) {
+      // Check if court is in maintenance
+      const court = localCourts.find(c => c.id === courtId);
+      if (court?.status === 'Maintenance') {
+        return {
+          status: 'maintenance',
+          price: 0,
+          player: '',
+          bookingId: ''
+        };
+      }
+      
+      // Available
+      return {
+        status: 'available',
+        price: 50, // Default price
+        player: '',
+        bookingId: ''
+      };
+    }
+    
+    const timeSlotBooking = courtBookings[courtName][timeSlot];
+    if (timeSlotBooking && timeSlotBooking.status === 'booked') {
+      return {
+        status: timeSlotBooking.status,
+        price: timeSlotBooking.price,
+        player: timeSlotBooking.player || '',
+        bookingId: timeSlotBooking.bookingId || ''
+      };
+    }
+    
+    // Available
+    return {
+      status: 'available',
+      price: 50, // Default price
+      player: '',
+      bookingId: ''
+    };
+  };
+
+  const getAvailableSlotsCount = () => {
+    let count = 0;
+    localTimeSlots.forEach(timeSlot => {
+      localCourts.forEach(court => {
+        if (selectedCourt === 'all' || selectedCourt === court.id.toString()) {
+          const availability = getCourtAvailability(court.id, timeSlot);
+          if (availability.status === 'available') count++;
+        }
+      });
+    });
+    return count;
+  };
+
+  const getBookedSlotsCount = () => {
+    let count = 0;
+    localTimeSlots.forEach(timeSlot => {
+      localCourts.forEach(court => {
+        if (selectedCourt === 'all' || selectedCourt === court.id.toString()) {
+          const availability = getCourtAvailability(court.id, timeSlot);
+          if (availability.status === 'booked') count++;
+        }
+      });
+    });
+    return count;
+  };
+
+  const getMaintenanceCount = () => {
+    return localCourts.filter(court => 
+      (selectedCourt === 'all' || selectedCourt === court.id.toString()) && 
+      court.status === 'Maintenance'
+    ).length;
+  };
+
+  const getRevenueToday = () => {
+    const bookings = localCourtBookings[selectedDate] || {};
+    return Object.values(bookings)
+      .filter(booking => booking.status === 'booked')
+      .reduce((total, booking) => total + booking.price, 0);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Court Rental & Booking</h2>
         <div className="flex items-center space-x-4">
+          <button
+            onClick={refreshData}
+            disabled={isLoading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+          >
+            {isLoading ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            <span>{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
           <div>
             <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
             <input
@@ -150,8 +367,8 @@ const CourtRental: React.FC<CourtRentalProps> = ({
               className="block px-3 py-2 border border-gray-300 rounded-md leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             >
               <option value="all">All Courts</option>
-              {Object.keys(courtBookings).map(court => (
-                <option key={court} value={court}>{court}</option>
+              {localCourts.map(court => (
+                <option key={court.id} value={court.id}>{court.name}</option>
               ))}
             </select>
           </div>
@@ -242,12 +459,13 @@ const CourtRental: React.FC<CourtRentalProps> = ({
                 <div className="text-sm font-medium mb-1">{date.getDate()}</div>
                 {isCurrentMonth && (
                   <div className="text-xs space-y-1">
-                    {Object.keys(courtBookings).slice(0, 2).map(court => {
-                      const courtBookingsForDate = courtBookings[court][dateString];
-                      if (courtBookingsForDate) {
+                    {localCourts.slice(0, 2).map(court => {
+                      const bookings = localCourtBookings[dateString] || {};
+                      const courtBookings = bookings[court.id.toString()];
+                      if (courtBookings) {
                         return (
-                          <div key={court} className="text-xs truncate">
-                            {court}: {courtBookingsForDate.status}
+                          <div key={court.id} className="text-xs truncate">
+                            {court.name}: {courtBookings.status}
                           </div>
                         );
                       }
@@ -265,40 +483,41 @@ const CourtRental: React.FC<CourtRentalProps> = ({
           <h4 className="text-lg font-medium text-gray-900 mb-4">Time Slots for {new Date(selectedDate).toLocaleDateString()}</h4>
           <div className="overflow-x-auto">
             <div className="grid grid-cols-1 gap-4">
-              {timeSlots.map(time => (
+              {localTimeSlots.map(time => (
                 <div key={time} className="grid grid-cols-6 gap-4 items-center p-3 bg-gray-50 rounded-lg">
                   <div className="font-medium text-gray-900">{time}</div>
-                  {Object.keys(courtBookings).map(court => {
-                    if (selectedCourt !== 'all' && selectedCourt !== court) return null;
+                  {localCourts.map(court => {
+                    if (selectedCourt !== 'all' && selectedCourt !== court.id.toString()) return null;
                     
-                    const booking = courtBookings[court][time];
-                    if (!booking) return (
-                      <div key={court} className="text-center text-gray-400">-</div>
+                    const availability = getCourtAvailability(court.id, time);
+                    if (!availability) return (
+                      <div key={court.id} className="text-center text-gray-400">-</div>
                     );
 
                     return (
-                      <div key={court} className="text-center">
+                      <div key={court.id} className="text-center">
                         <div
-                          className={`p-2 rounded border transition-all duration-200 ${getBookingStatusColor(booking.status)}`}
+                          className={`p-2 rounded border transition-all duration-200 ${getBookingStatusColor(availability.status)}`}
                           onClick={() => {
-                            if (booking.status === 'available') {
-                              handleCourtBooking(court, time);
+                            if (availability.status === 'available') {
+                              handleCourtBooking(court.id.toString(), time);
                             }
                           }}
                         >
                           <div className="flex items-center justify-center space-x-1 mb-1">
-                            {getStatusIcon(booking.status)}
+                            {getStatusIcon(availability.status)}
                             <span className="text-xs font-medium">
-                              {booking.status === 'available' ? 'Available' : 
-                               booking.status === 'booked' ? 'Booked' :
-                               booking.status === 'maintenance' ? 'Maintenance' : 'Reserved'}
+                              {availability.status === 'available' ? 'Available' : 
+                               availability.status === 'booked' ? 'Booked' :
+                               availability.status === 'maintenance' ? 'Maintenance' : 
+                               availability.status === 'reserved' ? 'Reserved' : 'Completed'}
                             </span>
                           </div>
-                          <div className="text-sm font-bold">${booking.price}</div>
-                          {booking.status === 'booked' && (
-                            <div className="text-xs text-gray-600 truncate">{booking.player}</div>
+                          <div className="text-sm font-bold">${availability.price}</div>
+                          {availability.status === 'booked' && (
+                            <div className="text-xs text-gray-600 truncate">{availability.player}</div>
                           )}
-                          {booking.status === 'available' && (
+                          {availability.status === 'available' && (
                             <div className="text-xs text-green-600 font-medium">Click to Book</div>
                           )}
                         </div>
@@ -317,17 +536,11 @@ const CourtRental: React.FC<CourtRentalProps> = ({
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Available Slots</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {Object.values(courtBookings).reduce((total, court) => 
-                  total + Object.values(court).filter(booking => booking.status === 'available').length, 0
-                )}
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">{getAvailableSlotsCount()}</p>
             </div>
           </div>
         </div>
@@ -335,17 +548,11 @@ const CourtRental: React.FC<CourtRentalProps> = ({
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+              <Users className="h-8 w-8 text-red-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Booked Slots</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {Object.values(courtBookings).reduce((total, court) => 
-                  total + Object.values(court).filter(booking => booking.status === 'booked').length, 0
-                )}
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">{getBookedSlotsCount()}</p>
             </div>
           </div>
         </div>
@@ -353,17 +560,11 @@ const CourtRental: React.FC<CourtRentalProps> = ({
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              </svg>
+              <Wrench className="h-8 w-8 text-yellow-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Maintenance</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                {Object.values(courtBookings).reduce((total, court) => 
-                  total + Object.values(court).filter(booking => booking.status === 'maintenance').length, 0
-                )}
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">{getMaintenanceCount()}</p>
             </div>
           </div>
         </div>
@@ -371,18 +572,11 @@ const CourtRental: React.FC<CourtRentalProps> = ({
         <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <svg className="h-8 w-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-              </svg>
+              <DollarSign className="h-8 w-8 text-blue-600" />
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Revenue Today</p>
-              <p className="text-2xl font-semibold text-gray-900">
-                ${Object.values(courtBookings).reduce((total, court) => 
-                  total + Object.values(court).filter(booking => booking.status === 'booked')
-                    .reduce((courtTotal, booking) => courtTotal + booking.price, 0), 0
-                )}
-              </p>
+              <p className="text-2xl font-semibold text-gray-900">${getRevenueToday()}</p>
             </div>
           </div>
         </div>
@@ -394,7 +588,7 @@ const CourtRental: React.FC<CourtRentalProps> = ({
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div className="mt-3">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
-                Book Court {selectedCourtForBooking} at {selectedTimeSlot}
+                Book Court {localCourts.find(c => c.id === parseInt(selectedCourtForBooking))?.name} at {selectedTimeSlot}
               </h3>
               
               <div className="space-y-4">
@@ -465,10 +659,11 @@ const CourtRental: React.FC<CourtRentalProps> = ({
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+                  className="px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
                   onClick={handleConfirmBooking}
+                  disabled={isLoading}
                 >
-                  Confirm Booking
+                  {isLoading ? 'Creating...' : 'Confirm Booking'}
                 </button>
               </div>
             </div>

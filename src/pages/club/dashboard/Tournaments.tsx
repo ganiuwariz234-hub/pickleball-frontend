@@ -23,11 +23,11 @@ interface Tournament {
 }
 
 interface TournamentsProps {
-  tournaments: Tournament[];
+  tournaments: Tournament[] | null;
 }
 
 const Tournaments: React.FC<TournamentsProps> = ({ tournaments: initialTournaments }) => {
-  const [tournaments, setTournaments] = useState<Tournament[]>(initialTournaments);
+  const [tournaments, setTournaments] = useState<Tournament[]>(initialTournaments || []);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -377,72 +377,80 @@ Status: ${tournament.status}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {tournaments.map((tournament) => (
-                <tr key={tournament.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{tournament.name}</div>
-                      <div className="text-sm text-gray-500">{tournament.tournamentType} • {tournament.skillLevel}</div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">{tournament.date}</div>
-                    <div className="text-sm text-gray-500">{tournament.startTime} - {tournament.endTime}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {tournament.participants}/{tournament.maxParticipants}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tournament.entryFee}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tournament.totalRevenue}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tournament.expenses}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`font-bold ${
-                      tournament.profit > 0 ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      ${tournament.profit}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(tournament.status)}`}>
-                      {tournament.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
-                      <button
-                        className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        onClick={() => handleEditTournament(tournament)}
-                      >
-                        <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                        Edit
-                      </button>
-                      <button
-                        className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        onClick={() => {
-                          setSelectedTournament(tournament);
-                          setShowExpenseModal(true);
-                        }}
-                      >
-                        <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Expense
-                      </button>
-                      <button
-                        className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
-                        onClick={() => generateReport(tournament)}
-                      >
-                        <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        Report
-                      </button>
-                    </div>
+              {tournaments && tournaments.length > 0 ? (
+                tournaments.map((tournament) => (
+                  <tr key={tournament.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div>
+                        <div className="text-sm font-medium text-gray-900">{tournament.name}</div>
+                        <div className="text-sm text-gray-500">{tournament.tournamentType} • {tournament.skillLevel}</div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{tournament.date}</div>
+                      <div className="text-sm text-gray-500">{tournament.startTime} - {tournament.endTime}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {tournament.participants}/{tournament.maxParticipants}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tournament.entryFee}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tournament.totalRevenue}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${tournament.expenses}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`font-bold ${
+                        tournament.profit > 0 ? 'text-green-600' : 'text-red-600'
+                      }`}>
+                        ${tournament.profit}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(tournament.status)}`}>
+                        {tournament.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex space-x-2">
+                        <button
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                          onClick={() => handleEditTournament(tournament)}
+                        >
+                          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Edit
+                        </button>
+                        <button
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                          onClick={() => {
+                            setSelectedTournament(tournament);
+                            setShowExpenseModal(true);
+                          }}
+                        >
+                          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                          </svg>
+                          Add Expense
+                        </button>
+                        <button
+                          className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-xs font-medium text-gray-700 bg-white hover:bg-gray-50"
+                          onClick={() => generateReport(tournament)}
+                        >
+                          <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                          Report
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                    No tournaments found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

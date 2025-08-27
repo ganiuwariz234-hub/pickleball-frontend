@@ -11,7 +11,8 @@ import {
   fetchMicrositeConfig, 
   fetchUpcomingEvents, 
   fetchCourtStatus, 
-  fetchTimeSlots 
+  fetchTimeSlots,
+  ClubMember
 } from '../../../store/slices/clubDashboardSlice';
 
 // Import dashboard components
@@ -22,6 +23,23 @@ import Invoices from './Invoices';
 import Microsite from './Microsite';
 import Reports from './Reports';
 import Members from './Members';
+
+// Interface for the Members component
+interface Member {
+  id: string;
+  username: string;
+  full_name: string;
+  user_type: string;
+  skill_level: string;
+  membership_status: string;
+  created_at: string;
+  email?: string;
+  phone?: string;
+  profile_photo?: string;
+  last_visit?: string;
+  total_visits?: number;
+  membership_expires_at?: string;
+}
 
 const ClubDashboard = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -108,10 +126,38 @@ const ClubDashboard = () => {
   };
 
   const getMemberStatusColor = (status: string) => {
-    switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+    switch (status.toLowerCase()) {
+      case 'active':
+      case 'basic':
+      case 'premium':
+      case 'vip':
+        return 'bg-green-100 text-green-800';
+      case 'inactive':
+      case 'suspended':
+      case 'expired':
+        return 'bg-red-100 text-red-800';
+      default: 
+        return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Map ClubMember to Member type for the Members component
+  const mapClubMembersToMembers = (clubMembers: ClubMember[]): Member[] => {
+    return clubMembers.map(member => ({
+      id: member.id?.toString() || '',
+      username: member.email?.split('@')[0] || member.name?.toLowerCase().replace(/\s+/g, '') || '',
+      full_name: member.name || '',
+      user_type: 'player',
+      skill_level: '3.0',
+      membership_status: member.type?.toLowerCase() || 'basic',
+      created_at: member.joinDate || new Date().toISOString(),
+      email: member.email || '',
+      phone: member.phone || '',
+      profile_photo: member.photo || '',
+      last_visit: member.lastVisit || '',
+      total_visits: member.totalVisits || 0,
+      membership_expires_at: member.membershipExpiry || ''
+    }));
   };
 
   return (
@@ -238,7 +284,19 @@ const ClubDashboard = () => {
           <div className="px-6 py-6 min-h-[400px]">
             {/* Overview Tab */}
             {activeTab === 'overview' && (
-              <Overview clubStats={clubStats} courtStatus={courtStatus || []} />
+              <Overview 
+                clubStats={clubStats} 
+                courtStatus={courtStatus || []} 
+                onTabSelect={() => {
+                  // Trigger data fetch when Overview tab is selected
+                  if (user?.club_id) {
+                    dispatch(fetchClubStats(user.club_id));
+                    dispatch(fetchCourtStatus(user.club_id));
+                    dispatch(fetchUpcomingEvents(user.club_id));
+                    dispatch(fetchClubMembers(user.club_id));
+                  }
+                }}
+              />
             )}
 
             {/* Court Rental Tab */}
@@ -275,7 +333,7 @@ const ClubDashboard = () => {
 
             {/* Members Tab */}
             {activeTab === 'members' && (
-              <Members members={members || []} />
+              <Members members={mapClubMembersToMembers(members || [])} />
             )}
           </div>
         </div>
@@ -343,26 +401,26 @@ const ClubDashboard = () => {
             </div>
             <div className="px-6 py-4">
               <div className="space-y-4">
-                {members.slice(0, 3).map((member) => (
+                {mapClubMembersToMembers(members || []).slice(0, 3).map((member) => (
                   <div key={member.id} className="animate-on-scroll flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="flex-shrink-0 h-10 w-10">
-                        {member.photo ? (
-                          <img className="h-10 w-10 rounded-full" src={member.photo} alt={member.name} />
+                        {member.profile_photo ? (
+                          <img className="h-10 w-10 rounded-full" src={member.profile_photo} alt={member.full_name} />
                         ) : (
                           <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-medium">
-                            {member.name.split(' ').map(n => n[0]).join('')}
+                            {member.full_name.split(' ').map(n => n[0]).join('')}
                           </div>
                         )}
                       </div>
                       <div>
-                        <h4 className="animate-on-scroll font-medium text-gray-900">{member.name}</h4>
-                        <p className="animate-on-scroll text-sm text-gray-600">{member.type} • Joined: {member.joinDate}</p>
+                        <h4 className="animate-on-scroll font-medium text-gray-900">{member.full_name}</h4>
+                        <p className="animate-on-scroll text-sm text-gray-600">{member.membership_status} • Joined: {member.created_at}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`animate-on-scroll inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getMemberStatusColor(member.status)}`}>
-                        {member.status}
+                      <span className={`animate-on-scroll inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getMemberStatusColor(member.membership_status)}`}>
+                        {member.membership_status}
                       </span>
                     </div>
                   </div>

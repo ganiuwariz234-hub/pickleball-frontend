@@ -153,6 +153,7 @@ export const fetchClubStats = createAsyncThunk(
   'clubDashboard/fetchClubStats',
   async (clubId: number) => {
     const response = await api.get(`/clubs/${clubId}/stats`);
+    // Backend returns { success: true, data: stats } so we need response.data.data
     return (response as any).data.data;
   }
 );
